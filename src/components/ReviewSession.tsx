@@ -34,7 +34,10 @@ export default function ReviewSession({ cards, onComplete }: Props) {
     mode.current = isFillBlank ? "fill-blank" : "flashcard";
 
     const primary = card.sentences[0] ?? "";
-    setBlank(isFillBlank ? pickBlankWord(primary) : null);
+    const blankResult = isFillBlank ? pickBlankWord(primary) : null;
+    // Fall back to flashcard if no blankable word found
+    if (!blankResult) mode.current = "flashcard";
+    setBlank(blankResult);
   }, []);
 
   useEffect(() => {
