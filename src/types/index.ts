@@ -1,0 +1,61 @@
+export interface Item {
+  id: string;
+  number: number;
+  sentences: string[];
+}
+
+export interface Lesson {
+  id: string;
+  type: "Hoofdles" | "Mijlpaal";
+  sublesson: number;
+  audio: Record<string, string>;
+  items: Item[];
+}
+
+export interface Unit {
+  id: string;
+  unit: number;
+  level: number;
+  name: string;
+  folder: string;
+  lessons: Lesson[];
+}
+
+export interface UnitsData {
+  units: Unit[];
+}
+
+// SRS card state stored in SQLite
+export interface CardState {
+  itemId: string;
+  easeFactor: number;   // SM-2 ease factor, starts at 2.5
+  interval: number;     // days until next review
+  repetitions: number;  // consecutive correct answers
+  nextReview: string;   // ISO date string
+  totalReviews: number;
+  correctReviews: number;
+}
+
+export type Rating = "forgot" | "hard" | "easy";
+
+// A review result sent from the client
+export interface ReviewResult {
+  itemId: string;
+  rating: Rating;
+  responseTimeMs: number;
+}
+
+// A card ready for review, with its content
+export interface ReviewCard {
+  itemId: string;
+  unitId: string;
+  unitName: string;
+  lessonId: string;
+  lessonType: string;
+  sentences: string[];
+  audioFolder: string;
+  lessonAudio: Record<string, string>;
+  state: CardState | null;  // null = never reviewed before
+}
+
+export type ReviewMode = "flashcard" | "fill-blank" | "listening";

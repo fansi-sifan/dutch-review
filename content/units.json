@@ -118,8 +118,7 @@
                 "Het meisje rent.",
                 "De jongen rent.",
                 "De man rent.",
-                "De vrouw rent.",
-                "1"
+                "De vrouw rent."
               ]
             },
             {
@@ -326,8 +325,7 @@
                 "De meisjes lezen.",
                 "Het meisje leest.",
                 "De meisjes schrijven.",
-                "Het meisje schrijft.",
-                "2"
+                "Het meisje schrijft."
               ]
             },
             {
@@ -461,8 +459,7 @@
               "sentences": [
                 "Zij eten een broodje.",
                 "Hij eet rijst.",
-                "Zij drinkt water.",
-                "3"
+                "Zij drinkt water."
               ]
             },
             {
@@ -665,8 +662,7 @@
                 "De vrouwen hebben rijst.",
                 "De mannen hebben geen rijst.",
                 "De jongen heeft een pen.",
-                "Het meisje heeft geen pen.",
-                "4"
+                "Het meisje heeft geen pen."
               ]
             },
             {
@@ -874,8 +870,7 @@
                 "De auto is rood.",
                 "De auto’s zijn rood.",
                 "De kat is zwart.",
-                "De katten zijn zwart.",
-                "5"
+                "De katten zijn zwart."
               ]
             },
             {
@@ -1060,8 +1055,7 @@
                 "Ik ben dokter.",
                 "Ik ben geen dokter.",
                 "Ik ben leerling.",
-                "Ik ben geen leerling.",
-                "6"
+                "Ik ben geen leerling."
               ]
             },
             {
@@ -1231,8 +1225,7 @@
               "number": 41,
               "sentences": [
                 "Tot ziens.",
-                "Tot ziens.",
-                "7"
+                "Tot ziens."
               ]
             }
           ]
@@ -1426,8 +1419,7 @@
                 "Hoeveel kommen zijn geel?",
                 "Twee kommen zijn geel.",
                 "Hoeveel telefoons zijn zwart?",
-                "Eén telefoon is zwart.",
-                "8"
+                "Eén telefoon is zwart."
               ]
             },
             {
@@ -1607,8 +1599,7 @@
                 "Wie drinkt er?",
                 "De vrouwen drinken.",
                 "Wie schrijft er?",
-                "Het meisje schrijft.",
-                "9"
+                "Het meisje schrijft."
               ]
             },
             {
@@ -1706,8 +1697,7 @@
                 "Hallo.",
                 "Hallo.",
                 "Tot ziens.",
-                "Tot ziens.",
-                "10"
+                "Tot ziens."
               ]
             }
           ]
@@ -1888,8 +1878,7 @@
                 "de moeder",
                 "de dochter",
                 "de vader",
-                "de zoon",
-                "11"
+                "de zoon"
               ]
             },
             {
@@ -2069,8 +2058,7 @@
               "sentences": [
                 "Jij bent mijn broer.",
                 "Jij bent mijn zus.",
-                "Jij bent mijn vriend.",
-                "12"
+                "Jij bent mijn vriend."
               ]
             },
             {
@@ -2197,8 +2185,7 @@
                 "Eet u?",
                 "Nee.",
                 "Wat doet u?",
-                "Ik schrijf.",
-                "13"
+                "Ik schrijf."
               ]
             }
           ]
@@ -2381,8 +2368,7 @@
                 "De jongen ligt in het huis.",
                 "Het meisje zit in het appartement.",
                 "Het gezin staat in het huis.",
-                "De vrouw staat in het appartement.",
-                "14"
+                "De vrouw staat in het appartement."
               ]
             },
             {
@@ -2574,8 +2560,7 @@
                 "De man staat.",
                 "De man zit.",
                 "De vrouw staat.",
-                "De vrouw zit.",
-                "15"
+                "De vrouw zit."
               ]
             },
             {
@@ -2747,8 +2732,7 @@
                 "een park",
                 "een straat",
                 "een straat",
-                "een brug",
-                "16"
+                "een brug"
               ]
             },
             {
@@ -2932,8 +2916,7 @@
               "sentences": [
                 "Hallo, hoe heet u?",
                 "Ik heet Peter de Vries.",
-                "Leuk om u te ontmoeten.",
-                "17"
+                "Leuk om u te ontmoeten."
               ]
             },
             {
@@ -3110,8 +3093,7 @@
                 "Haar broek is blauw.",
                 "Haar T-shirt is oranje.",
                 "Haar jas is blauw.",
-                "Haar jurk is oranje.",
-                "18"
+                "Haar jurk is oranje."
               ]
             },
             {
@@ -3289,8 +3271,7 @@
                 "Ik ben ziek.",
                 "Ik ben moe.",
                 "Ik heb het koud.",
-                "Ik heb honger.",
-                "19"
+                "Ik heb honger."
               ]
             },
             {
@@ -3444,8 +3425,7 @@
                 "Hoi opa.",
                 "Hallo Maaike.",
                 "Heb jij honger?",
-                "Ja, ik heb honger.",
-                "20"
+                "Ja, ik heb honger."
               ]
             }
           ]
@@ -3723,8 +3703,7 @@
                 "Het gezin ontbijt binnen.",
                 "Het gezin ontbijt buiten.",
                 "Zij luncht binnen.",
-                "Zij luncht buiten.",
-                "21"
+                "Zij luncht buiten."
               ]
             },
             {
@@ -3917,8 +3896,7 @@
                 "Goedemorgen, hoe gaat het met u?",
                 "Goed, dank u.",
                 "Goedemiddag, hoe gaat het met jullie?",
-                "Goed, dank u.",
-                "22"
+                "Goed, dank u."
               ]
             },
             {
@@ -4079,8 +4057,7 @@
                 "donderdag",
                 "vrijdag",
                 "zaterdag",
-                "zondag",
-                "23"
+                "zondag"
               ]
             },
             {
@@ -4275,8 +4252,7 @@
                 "vier vingers",
                 "drie handen",
                 "tien tenen",
-                "één voet",
-                "24"
+                "één voet"
               ]
             },
             {
@@ -4484,8 +4460,7 @@
                 "Mensen uit Egypte spreken Arabisch.",
                 "Mensen uit China spreken Chinees.",
                 "Mensen uit Nederland spreken Nederlands.",
-                "Mensen uit Australië spreken Engels.",
-                "25"
+                "Mensen uit Australië spreken Engels."
               ]
             },
             {
@@ -4651,8 +4626,7 @@
                 "Hoe oud is hij?",
                 "Hij is dertig jaar oud.",
                 "Hoe oud ben jij?",
-                "Ik ben vijfendertig jaar oud.",
-                "26"
+                "Ik ben vijfendertig jaar oud."
               ]
             },
             {
@@ -4856,8 +4830,7 @@
                 "De paarden zijn nat.",
                 "De paarden zijn droog.",
                 "Haar haar is nat.",
-                "Haar haar is droog.",
-                "27"
+                "Haar haar is droog."
               ]
             },
             {
@@ -5035,8 +5008,7 @@
                 "een laken",
                 "een kussen",
                 "een deken",
-                "een handdoek",
-                "28"
+                "een handdoek"
               ]
             },
             {
@@ -5247,8 +5219,7 @@
               "number": 17,
               "sentences": [
                 "Waar ben jij?",
-                "Ik ben in de keuken.",
-                "29"
+                "Ik ben in de keuken."
               ]
             },
             {
@@ -5380,8 +5351,7 @@
                 "fruit",
                 "groente",
                 "groente",
-                "vlees",
-                "30"
+                "vlees"
               ]
             },
             {
@@ -5575,8 +5545,7 @@
                 "Zij heeft een jas nodig.",
                 "Zij wil een paarse jas.",
                 "Hij heeft een bril nodig.",
-                "Hij wil een rode bril.",
-                "31"
+                "Hij wil een rode bril."
               ]
             },
             {
@@ -5761,8 +5730,7 @@
                 "De vrouwen vinden thee lekker.",
                 "Het meisje vindt rode schoenen niet mooi.",
                 "De kinderen vinden speelgoed mooi.",
-                "De vrouwen vinden sieraden mooi.",
-                "32"
+                "De vrouwen vinden sieraden mooi."
               ]
             },
             {
@@ -5943,8 +5911,7 @@
               "sentences": [
                 "één euro",
                 "vijf euro",
-                "tien euro",
-                "33"
+                "tien euro"
               ]
             },
             {
@@ -6140,8 +6107,7 @@
                 "Zij betalen met contant geld.",
                 "Zij betaalt met een cheque.",
                 "Hij betaalt met een creditcard.",
-                "Ik betaal met contant geld.",
-                "34"
+                "Ik betaal met contant geld."
               ]
             },
             {
@@ -6335,8 +6301,7 @@
               "sentences": [
                 "Deze camera is duur.",
                 "Deze televisie is duurder.",
-                "Deze computer is het duurst.",
-                "35"
+                "Deze computer is het duurst."
               ]
             },
             {
@@ -6510,8 +6475,7 @@
               "sentences": [
                 "Deze stoel is te klein.",
                 "Jij bent te groot.",
-                "Ik ben te klein.",
-                "36"
+                "Ik ben te klein."
               ]
             },
             {
@@ -6712,8 +6676,7 @@
                 "Wilt u taart?",
                 "Ja, lekker.",
                 "Dank u.",
-                "Alstublieft.",
-                "37"
+                "Alstublieft."
               ]
             },
             {
@@ -6911,8 +6874,7 @@
               "number": 17,
               "sentences": [
                 "Heeft u een kleiner pak?",
-                "Ja, ik heb een kleiner pak.",
-                "38"
+                "Ja, ik heb een kleiner pak."
               ]
             },
             {
@@ -7059,8 +7021,7 @@
                 "Ik ga naar het hotel.",
                 "Hij gaat naar de bank.",
                 "Wij gaan naar het park.",
-                "Zij gaan naar het museum.",
-                "1"
+                "Zij gaan naar het museum."
               ]
             },
             {
@@ -7239,8 +7200,7 @@
                 "Het dier ligt op de auto.",
                 "Het dier zit in het huis.",
                 "Het dier staat voor het huis.",
-                "Het dier staat naast de auto.",
-                "2"
+                "Het dier staat naast de auto."
               ]
             },
             {
@@ -7435,8 +7395,7 @@
                 "Ik ga naar het werk.",
                 "Hij gaat naar het werk.",
                 "Zij zijn op het werk.",
-                "Zij is op het werk.",
-                "3"
+                "Zij is op het werk."
               ]
             },
             {
@@ -7635,8 +7594,7 @@
                 "museum?",
                 "Ga naar de derde straat en sla links af.",
                 "Pardon, hoe kom ik bij de bibliotheek?",
-                "Ga naar het museum en sla rechts af.",
-                "4"
+                "Ga naar het museum en sla rechts af."
               ]
             },
             {
@@ -7767,8 +7725,7 @@
                 "Het is acht uur ‘s ochtends.",
                 "Het is drie uur ‘s middags.",
                 "Het is zeven uur ‘s avonds.",
-                "Het is elf uur ‘s avonds.",
-                "5"
+                "Het is elf uur ‘s avonds."
               ]
             },
             {
@@ -7941,8 +7898,7 @@
                 "vijfenvijftig?",
                 "Nee, de vlucht is dertig minuten vertraagd.",
                 "De vlucht vertrekt om negen uur",
-                "vijfentwintig.",
-                "6"
+                "vijfentwintig."
               ]
             },
             {
@@ -8067,8 +8023,7 @@
                 "Mijn vlucht komt aan om zeven uur",
                 "drieëntwintig.",
                 "Hoe laat komt uw trein aan?",
-                "Mijn trein komt aan om zes uur vierenvijftig.",
-                "7"
+                "Mijn trein komt aan om zes uur vierenvijftig."
               ]
             }
           ]
@@ -8277,8 +8232,7 @@
                 "Kunnen wij buiten eten?",
                 "Nee, dat kan niet.",
                 "Waarom niet?",
-                "Omdat het gaat regenen.",
-                "8"
+                "Omdat het gaat regenen."
               ]
             },
             {
@@ -8406,8 +8360,7 @@
                 "Wij gaan eten.",
                 "Zij gaan voetballen.",
                 "Ik ga lunchen.",
-                "Ik ga voetballen.",
-                "9"
+                "Ik ga voetballen."
               ]
             }
           ]
@@ -8645,8 +8598,7 @@
                 "Wat doe jij?",
                 "Ik lees een boek.",
                 "Heb jij dit boek gelezen?",
-                "Ja, ik heb het gelezen.",
-                "10"
+                "Ja, ik heb het gelezen."
               ]
             },
             {
@@ -8834,8 +8786,7 @@
                 "Heb jij een woordenboek?",
                 "Nee, maar de leraar heeft een woordenboek.",
                 "Heeft u een woordenboek?",
-                "Ja. Het woordenboek ligt op mijn bureau.",
-                "11"
+                "Ja. Het woordenboek ligt op mijn bureau."
               ]
             },
             {
@@ -9026,8 +8977,7 @@
               "sentences": [
                 "Wij hebben gegeten.",
                 "Wij hebben in het park gerend.",
-                "Wij hebben gegolft.",
-                "12"
+                "Wij hebben gegolft."
               ]
             },
             {
@@ -9202,8 +9152,7 @@
                 "Pardon, wat betekent dit woord?",
                 "Het betekent ‘bibliotheek’.",
                 "Pardon, wat betekent dit bord?",
-                "Het betekent ‘restaurant’.",
-                "13"
+                "Het betekent ‘restaurant’."
               ]
             },
             {
@@ -9303,8 +9252,7 @@
                 "alstublieft?",
                 "Ja, het betekent ‘apotheek’.",
                 "Dank u.",
-                "Alstublieft.",
-                "14"
+                "Alstublieft."
               ]
             }
           ]
@@ -9493,8 +9441,7 @@
                 "Wij zaten op dezelfde basisschool.",
                 "Nu studeren wij aan dezelfde universiteit.",
                 "Zij zaten op dezelfde middelbare school.",
-                "Nu studeren zij aan dezelfde universiteit.",
-                "15"
+                "Nu studeren zij aan dezelfde universiteit."
               ]
             },
             {
@@ -9659,8 +9606,7 @@
                 "Ik werk nu niet maar ik was vroeger leraar.",
                 "Welk vak gaf u?",
                 "Toen ik in Brazilië was, gaf ik Engels. Toen ik",
-                "in Egypte was, gaf ik geschiedenis.",
-                "16"
+                "in Egypte was, gaf ik geschiedenis."
               ]
             }
           ]
@@ -9848,8 +9794,7 @@
                 "Wilt u koffie?",
                 "Ja, ik wil graag koffie.",
                 "Wilt u water?",
-                "Ja, ik wil graag water.",
-                "17"
+                "Ja, ik wil graag water."
               ]
             },
             {
@@ -9982,8 +9927,7 @@
                 "Ja, ik heb kunst gestudeerd aan een",
                 "universiteit in Nederland.",
                 "Spreek jij Nederlands?",
-                "Ja, ik spreek Nederlands.",
-                "18"
+                "Ja, ik spreek Nederlands."
               ]
             }
           ]
@@ -10213,8 +10157,7 @@
                 "bureau.",
                 "Het schrijfblok ligt op het bureau.",
                 "Zij zet de kom op de tafel.",
-                "De kom staat op de tafel.",
-                "19"
+                "De kom staat op de tafel."
               ]
             },
             {
@@ -10409,8 +10352,7 @@
               "sentences": [
                 "Een week heeft zeven dagen.",
                 "Deze maand heeft dertig dagen.",
-                "Een jaar heeft twaalf maanden.",
-                "20"
+                "Een jaar heeft twaalf maanden."
               ]
             },
             {
@@ -10602,8 +10544,7 @@
                 "Wie bel jij?",
                 "Ik bel de dokter.",
                 "Met wie praat jij?",
-                "Ik praat met de dokter.",
-                "21"
+                "Ik praat met de dokter."
               ]
             },
             {
@@ -10809,8 +10750,7 @@
                 "Waar is het museum?",
                 "Ik weet het niet.",
                 "Waar is jouw sok?",
-                "Ik weet het niet.",
-                "22"
+                "Ik weet het niet."
               ]
             },
             {
@@ -11006,8 +10946,7 @@
               "sentences": [
                 "Ik maak het ontbijt.",
                 "Wij maken een salade.",
-                "Zij maken de lunch.",
-                "23"
+                "Zij maken de lunch."
               ]
             },
             {
@@ -11191,8 +11130,7 @@
                 "Deze schoenen zijn van mij.",
                 "Die schoenen zijn van mijn vrouw.",
                 "Deze fiets is van mij.",
-                "Die fiets is van mijn zus.",
-                "24"
+                "Die fiets is van mijn zus."
               ]
             },
             {
@@ -11378,8 +11316,7 @@
               "sentences": [
                 "Hier is het weer slecht.",
                 "Hier is het weer slechter.",
-                "Hier is het weer het slechtst.",
-                "25"
+                "Hier is het weer het slechtst."
               ]
             },
             {
@@ -11566,8 +11503,7 @@
                 "werken.",
                 "Weet jij wat dit betekent?",
                 "Nee, het spijt me. Ik weet niet wat dat",
-                "betekent.",
-                "26"
+                "betekent."
               ]
             },
             {
@@ -11749,8 +11685,7 @@
               "number": 17,
               "sentences": [
                 "Wat neem jij mee naar het feest?",
-                "Ik neem een dessert mee naar het feest.",
-                "27"
+                "Ik neem een dessert mee naar het feest."
               ]
             },
             {
@@ -11894,8 +11829,7 @@
                 "Wil jij met mij dansen?",
                 "Ja, ik wil met jou dansen.",
                 "Wil jij met mij spelen?",
-                "Ja, ik wil met jou spelen.",
-                "28"
+                "Ja, ik wil met jou spelen."
               ]
             },
             {
@@ -12076,8 +12010,7 @@
                 "bonen",
                 "boter",
                 "boter",
-                "peper",
-                "29"
+                "peper"
               ]
             },
             {
@@ -12274,8 +12207,7 @@
               "sentences": [
                 "De man speelt gitaar.",
                 "De jongen speelt piano met zijn opa.",
-                "De mannen spelen trommel.",
-                "30"
+                "De mannen spelen trommel."
               ]
             },
             {
@@ -12466,8 +12398,7 @@
                 "Zij zoekt haar sleutels.",
                 "Zij heeft haar sleutels gevonden.",
                 "Hij zoekt zijn bril.",
-                "Hij heeft zijn bril gevonden.",
-                "31"
+                "Hij heeft zijn bril gevonden."
               ]
             },
             {
@@ -12647,8 +12578,7 @@
               "sentences": [
                 "Waarom huil jij?",
                 "Omdat ik verdwaald ben.",
-                "Wij gaan jouw ouders zoeken.",
-                "32"
+                "Wij gaan jouw ouders zoeken."
               ]
             },
             {
@@ -12833,8 +12763,7 @@
                 "ingepakt.",
                 "Deze vrouw heeft vanochtend haar koffer",
                 "ingepakt.",
-                "Zij pakt nu haar koffer in.",
-                "33"
+                "Zij pakt nu haar koffer in."
               ]
             },
             {
@@ -13007,8 +12936,7 @@
               "sentences": [
                 "Hij zoekt een eiland.",
                 "Hij zoekt zijn bal.",
-                "Hij zoekt de zee.",
-                "34"
+                "Hij zoekt de zee."
               ]
             },
             {
@@ -13198,8 +13126,7 @@
                 "slippers voor mannen",
                 "slippers voor vrouwen",
                 "een handdoek",
-                "een korte broek",
-                "35"
+                "een korte broek"
               ]
             },
             {
@@ -13309,8 +13236,7 @@
                 "U kunt naar dit kleine eiland zeilen.",
                 "Wat moeten wij meenemen?",
                 "U moet uw zwemkleding en handdoeken",
-                "meenemen.",
-                "36"
+                "meenemen."
               ]
             }
           ]
@@ -13580,8 +13506,7 @@
               "sentences": [
                 "De kat springt op het bed.",
                 "Het meisje springt van het hek.",
-                "De jongen klimt op de tafel.",
-                "1"
+                "De jongen klimt op de tafel."
               ]
             },
             {
@@ -13778,8 +13703,7 @@
                 "Zij houden van elkaar.",
                 "De man en zijn vrouw schrijven elkaar een",
                 "brief.",
-                "De moeder en haar dochter omhelzen elkaar.",
-                "2"
+                "De moeder en haar dochter omhelzen elkaar."
               ]
             },
             {
@@ -13954,8 +13878,7 @@
                 "Deze vloer is van hout.",
                 "De vuilnisbak staat op de vloer.",
                 "De man repareert de vloer.",
-                "Zij repareren hun plafond.",
-                "3"
+                "Zij repareren hun plafond."
               ]
             },
             {
@@ -14163,8 +14086,7 @@
                 "Ik ga het bad schoonmaken.",
                 "Wil jij het toilet schoonmaken, alsjeblieft?",
                 "Ja, ik maak het toilet schoon wanneer jij de",
-                "vloer hebt geveegd.",
-                "4"
+                "vloer hebt geveegd."
               ]
             },
             {
@@ -14292,8 +14214,7 @@
                 "slaapkamer.",
                 "De vrouw oefent op de gitaar in de",
                 "woonkamer.",
-                "De man oefent op de viool in het theater.",
-                "5"
+                "De man oefent op de viool in het theater."
               ]
             },
             {
@@ -14494,8 +14415,7 @@
                 "Wanneer sporten jullie hier?",
                 "Wij sporten hier in de herfst.",
                 "Wanneer sporten jullie op school?",
-                "In de winter.",
-                "6"
+                "In de winter."
               ]
             }
           ]
@@ -14694,8 +14614,7 @@
                 "hoofd",
                 "buik",
                 "buik",
-                "arm",
-                "7"
+                "arm"
               ]
             },
             {
@@ -14882,8 +14801,7 @@
                 "innemen.",
                 "Dank u.",
                 "Doet u voorzichtig op een ladder? Tot ziens.",
-                "Tot ziens.",
-                "8"
+                "Tot ziens."
               ]
             }
           ]
@@ -15123,8 +15041,7 @@
                 "Er staat niets in de gootsteen. Alles staat op",
                 "de tafel.",
                 "Er staat niets op de tafel. Alles staat in de",
-                "gootsteen.",
-                "9"
+                "gootsteen."
               ]
             },
             {
@@ -15309,8 +15226,7 @@
                 "Zij weten waar zij vis kunnen vinden.",
                 "Zij weet niet waar haar auto is.",
                 "Zij wisten niet dat de baby sliep.",
-                "Zij weet dat de baby slaapt.",
-                "10"
+                "Zij weet dat de baby slaapt."
               ]
             },
             {
@@ -15423,8 +15339,7 @@
                 "Weet jij of wij genoeg taart hebben voor alle",
                 "gasten?",
                 "Wij hebben waarschijnlijk niet genoeg. Wij",
-                "moeten een taart kopen.",
-                "11"
+                "moeten een taart kopen."
               ]
             }
           ]
@@ -15635,8 +15550,7 @@
               "sentences": [
                 "Zij zijn blij omdat zij met elkaar spelen.",
                 "De vrouw is verdrietig omdat zij vertrekt.",
-                "Hij is bang omdat hij nooit heeft gereden.",
-                "12"
+                "Hij is bang omdat hij nooit heeft gereden."
               ]
             },
             {
@@ -15789,8 +15703,7 @@
                 "Zijn jullie gauw klaar met het repareren van",
                 "de brug?",
                 "Wij zijn al klaar met het repareren van de",
-                "brug.",
-                "13"
+                "brug."
               ]
             }
           ]
@@ -15989,8 +15902,7 @@
                 "Wat voor soort boom is dit?",
                 "Dit is een appelboom.",
                 "Wat voor soort boom is dit?",
-                "Dit is een dennenboom.",
-                "14"
+                "Dit is een dennenboom."
               ]
             },
             {
@@ -16165,8 +16077,7 @@
                 "Nee, hij is van hem!",
                 "Het spijt me. Hij is van mij.",
                 "Heeft hij honger?",
-                "Ja, hij heeft honger.",
-                "15"
+                "Ja, hij heeft honger."
               ]
             }
           ]
@@ -16385,8 +16296,7 @@
                 "Het is niet gevaarlijk om op deze paarden te",
                 "rijden.",
                 "Het is gevaarlijk om hier te kamperen.",
-                "Het is niet gevaarlijk om hier te kamperen.",
-                "16"
+                "Het is niet gevaarlijk om hier te kamperen."
               ]
             },
             {
@@ -16527,8 +16437,7 @@
                 "Hij heeft zich bezeerd.",
                 "Kan hij vliegen?",
                 "Nu niet, maar over twee weken kan hij",
-                "vliegen.",
-                "17"
+                "vliegen."
               ]
             }
           ]
@@ -16700,8 +16609,7 @@
               "number": 20,
               "sentences": [
                 "Doet de auto het?",
-                "Ja, de auto doet het.",
-                "18"
+                "Ja, de auto doet het."
               ]
             }
           ]
@@ -16890,8 +16798,7 @@
                 "kennen?",
                 "Wij studeerden aan dezelfde universiteit.",
                 "Wanneer heb jij Daniël leren kennen?",
-                "Ik heb hem twee jaar geleden leren kennen.",
-                "19"
+                "Ik heb hem twee jaar geleden leren kennen."
               ]
             },
             {
@@ -17059,8 +16966,7 @@
                 "Waarom is het belangrijk om Nederlands te",
                 "leren?",
                 "Als jij Nederlands leert, dan kun jij het",
-                "spreken.",
-                "20"
+                "spreken."
               ]
             },
             {
@@ -17236,8 +17142,7 @@
                 "Waar kan ik deze muntsoort omwisselen in",
                 "euro’s?",
                 "U kunt die muntsoort omwisselen op het",
-                "treinstation.",
-                "21"
+                "treinstation."
               ]
             },
             {
@@ -17422,8 +17327,7 @@
                 "Pardon, spreekt u Engels?",
                 "Ja, maar ik spreek maar een beetje Engels.",
                 "Spreekt u Chinees?",
-                "Ja, maar ik spreek maar een beetje Chinees.",
-                "22"
+                "Ja, maar ik spreek maar een beetje Chinees."
               ]
             },
             {
@@ -17555,8 +17459,7 @@
                 "Nee, jij kunt het in mijn koffer doen. Ik denk",
                 "dat ik genoeg ruimte heb.",
                 "Is er genoeg ruimte?",
-                "Ja, het past!",
-                "23"
+                "Ja, het past!"
               ]
             }
           ]
@@ -17760,8 +17663,7 @@
               "sentences": [
                 "Deze taart kost evenveel als die taart.",
                 "Deze kip kost meer dan deze pizza.",
-                "De salades kosten minder dan de broodjes.",
-                "24"
+                "De salades kosten minder dan de broodjes."
               ]
             },
             {
@@ -17946,8 +17848,7 @@
                 "Hoeveel weeg ik?",
                 "Jij weegt minstens dertig kilo.",
                 "Wil jij mij wegen, alsjeblieft?",
-                "Jij weegt bijna vijfendertig kilo!",
-                "25"
+                "Jij weegt bijna vijfendertig kilo!"
               ]
             }
           ]
@@ -18117,8 +18018,7 @@
                 "een hamer",
                 "een spijker",
                 "een schroevendraaier",
-                "een schroef",
-                "26"
+                "een schroef"
               ]
             },
             {
@@ -18303,8 +18203,7 @@
                 "Voeg tweehonderdvijftig milliliter koude melk",
                 "toe.",
                 "Voeg vijf gram zout toe.",
-                "Voeg honderdtwintig milliliter water toe.",
-                "27"
+                "Voeg honderdtwintig milliliter water toe."
               ]
             },
             {
@@ -18472,8 +18371,7 @@
               "number": 14,
               "sentences": [
                 "Past de sleutel?",
-                "Ja, de sleutel past!",
-                "28"
+                "Ja, de sleutel past!"
               ]
             }
           ]
@@ -18679,8 +18577,7 @@
               "sentences": [
                 "Gisteren waren er verkiezingen.",
                 "Hij heeft de verkiezingen verloren.",
-                "Hij heeft de verkiezingen gewonnen.",
-                "29"
+                "Hij heeft de verkiezingen gewonnen."
               ]
             },
             {
@@ -18863,8 +18760,7 @@
                 "De koningin heeft een ziekenhuis bezocht.",
                 "Wat is het nieuws vandaag?",
                 "De Franse president en de koning van Spanje",
-                "hebben elkaar ontmoet.",
-                "30"
+                "hebben elkaar ontmoet."
               ]
             }
           ]
@@ -19066,8 +18962,7 @@
                 "Wanneer is dit boek geschreven?",
                 "Het is geschreven in 1998.",
                 "Wie heeft het geschreven?",
-                "Janet Janssen heeft het geschreven.",
-                "31"
+                "Janet Janssen heeft het geschreven."
               ]
             },
             {
@@ -19220,8 +19115,7 @@
                 "Echt waar? Nee, dat weet ik niet.",
                 "Ja. Hij is ontdekt in Egypte door een Franse",
                 "militair, maar nu staat hij in een museum in",
-                "het Verenigd Koninkrijk.",
-                "32"
+                "het Verenigd Koninkrijk."
               ]
             }
           ]
@@ -19407,8 +19301,7 @@
                 "Nee, ik ben het vergeten.",
                 "Vergeet jij niet te stemmen vandaag?",
                 "Oké, ik ga stemmen wanneer ik klaar ben met",
-                "werken.",
-                "33"
+                "werken."
               ]
             },
             {
@@ -19592,8 +19485,7 @@
                 "Nee, ik heb weer niet geluisterd.",
                 "Ben jij ooit in China geweest?",
                 "Ja, ik ben er vorig jaar geweest en volgende",
-                "maand ga ik er weer naartoe.",
-                "34"
+                "maand ga ik er weer naartoe."
               ]
             },
             {
@@ -19736,8 +19628,7 @@
                 "verkleedfeesten.",
                 "Mexicanen vieren in november deze feestdag.",
                 "Op deze feestdag vieren mensen het nieuwe",
-                "jaar.",
-                "35"
+                "jaar."
               ]
             },
             {
@@ -19915,8 +19806,7 @@
                 "Is het tijd om naar de optocht te gaan?",
                 "Ja, laten wij naar de optocht gaan.",
                 "Ben jij klaar om naar het restaurant te gaan?",
-                "Ja, ik ben klaar. Laten wij gaan.",
-                "36"
+                "Ja, ik ben klaar. Laten wij gaan."
               ]
             },
             {
@@ -20139,8 +20029,7 @@
               "number": 15,
               "sentences": [
                 "Hoeveel kosten de vlaggen?",
-                "De vlaggen kosten twaalf euro.",
-                "37"
+                "De vlaggen kosten twaalf euro."
               ]
             },
             {

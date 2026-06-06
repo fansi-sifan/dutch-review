@@ -122,7 +122,8 @@ def parse_column(lines, num_x_min, num_x_max):
                 cur_item["sentences"].append(rest)
         elif cur_item is not None:
             txt = line_text(line)
-            if txt:
+            # Skip bare numbers — these are page numbers at the bottom of PDF pages
+            if txt and not re.match(r"^\d{1,3}$", txt):
                 cur_item["sentences"].append(txt)
 
     flush()
