@@ -13,31 +13,50 @@ interface Props {
 type Phase = "reveal" | "rate";
 type Mode = "flashcard" | "fill-blank";
 
+async function fetchTranslation(text: string, cache: Map<string, string>): Promise<string | null> {
+  if (cache.has(text)) return cache.get(text)!;
+  try {
+    const res = await fetch(
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=nl|en`
+    );
+    const data = await res.json();
+    const translated: string = data?.responseData?.translatedText;
+    if (translated) {
+      cache.set(text, translated);
+      return translated;
+    }
+  } catch {
+    // silent fail — translation is a nice-to-have
+  }
+  return null;
+}
+
 export default function ReviewSession({ cards, onComplete }: Props) {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("reveal");
   const [results, setResults] = useState<{ itemId: string; rating: Rating; responseTimeMs: number }[]>([]);
   const [startTime, setStartTime] = useState(Date.now());
   const [blank, setBlank] = useState<{ blanked: string; answer: string } | null>(null);
-  const [showAnswer, setShowAnswer] = useState(false);
+  const [translation, setTranslation] = useState<string | null>(null);
   const mode = useRef<Mode>("flashcard");
+  const translationCache = useRef<Map<string, string>>(new Map());
 
   const card = cards[index];
 
   const initCard = useCallback((card: ReviewCard) => {
     setPhase("reveal");
-    setShowAnswer(false);
+    setTranslation(null);
     setStartTime(Date.now());
 
     // 60% flashcard, 40% fill-blank
     const isFillBlank = Math.random() < 0.4;
-    mode.current = isFillBlank ? "fill-blank" : "flashcard";
-
     const primary = card.sentences[0] ?? "";
     const blankResult = isFillBlank ? pickBlankWord(primary) : null;
-    // Fall back to flashcard if no blankable word found
-    if (!blankResult) mode.current = "flashcard";
+    mode.current = blankResult ? "fill-blank" : "flashcard";
     setBlank(blankResult);
+
+    // Pre-fetch translation in background while user reads the card
+    fetchTranslation(primary, translationCache.current).then(setTranslation);
   }, []);
 
   useEffect(() => {
@@ -46,7 +65,6 @@ export default function ReviewSession({ cards, onComplete }: Props) {
 
   function handleReveal() {
     setPhase("rate");
-    setShowAnswer(true);
   }
 
   function handleRate(rating: Rating) {
@@ -64,6 +82,8 @@ export default function ReviewSession({ cards, onComplete }: Props) {
   if (!card) return null;
 
   const progress = (index / cards.length) * 100;
+  const primary = card.sentences[0] ?? "";
+  const rest = card.sentences.slice(1);
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
@@ -98,34 +118,50 @@ export default function ReviewSession({ cards, onComplete }: Props) {
           </div>
 
           {/* Card face */}
-          <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 mb-6 min-h-[200px] flex flex-col items-center justify-center gap-4">
-            <div className="text-center">
-              {mode.current === "fill-blank" && blank && !showAnswer ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 mb-6 min-h-[220px] flex flex-col items-center justify-center gap-4">
+
+            {/* Front: prompt */}
+            <div className="text-center w-full">
+              {mode.current === "fill-blank" && blank && phase === "reveal" ? (
                 <p className="text-2xl font-medium text-stone-800 leading-relaxed">
                   {blank.blanked}
                 </p>
               ) : (
-                <div className="space-y-1">
-                  {card.sentences.map((s, i) => (
-                    <p
-                      key={i}
-                      className={`text-xl leading-relaxed ${
-                        i === 0
-                          ? "font-medium text-stone-800"
-                          : "text-stone-500 text-base"
-                      }`}
-                    >
-                      {s}
-                    </p>
-                  ))}
-                </div>
+                <p className="text-2xl font-medium text-stone-800 leading-relaxed">
+                  {primary}
+                </p>
               )}
             </div>
 
-            {/* Fill-blank answer */}
-            {mode.current === "fill-blank" && blank && showAnswer && (
-              <div className="px-4 py-2 bg-orange-50 rounded-lg border border-orange-200">
-                <p className="text-orange-700 font-medium text-center">{blank.answer}</p>
+            {/* Back: revealed after Show */}
+            {phase === "rate" && (
+              <div className="w-full border-t border-stone-100 pt-4 space-y-3">
+                {/* Fill-blank answer highlight */}
+                {mode.current === "fill-blank" && blank && (
+                  <div className="px-4 py-2 bg-orange-50 rounded-lg border border-orange-200 text-center">
+                    <p className="text-orange-700 font-semibold">{blank.answer}</p>
+                  </div>
+                )}
+
+                {/* Additional Dutch sentences (variants/context) */}
+                {rest.length > 0 && (
+                  <div className="space-y-1 text-center">
+                    {rest.map((s, i) => (
+                      <p key={i} className="text-stone-500 text-base leading-relaxed">{s}</p>
+                    ))}
+                  </div>
+                )}
+
+                {/* English translation */}
+                {translation ? (
+                  <p className="text-center text-sm text-stone-400 italic pt-1">
+                    {translation}
+                  </p>
+                ) : (
+                  <p className="text-center text-xs text-stone-300 italic pt-1">
+                    translating…
+                  </p>
+                )}
               </div>
             )}
           </div>
