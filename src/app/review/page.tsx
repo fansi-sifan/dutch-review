@@ -40,18 +40,20 @@ export default function ReviewPage() {
     setState(data.cards.length > 0 ? "active" : "done");
   }
 
-  async function handleComplete(
+  // Called for every card rated — saves immediately so progress is never lost
+  function handleRate(result: { itemId: string; rating: Rating; responseTimeMs: number }) {
+    if (mode !== "forward") return;
+    fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify([result]),
+    });
+  }
+
+  // Called when session ends (naturally or via exit button)
+  function handleComplete(
     results: { itemId: string; rating: Rating; responseTimeMs: number }[]
   ) {
-    // Only update SRS state for forward sessions
-    if (mode === "forward") {
-      await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(results),
-      });
-    }
-
     const stats = {
       total: results.length,
       forgot: results.filter((r) => r.rating === "forgot").length,
@@ -63,7 +65,14 @@ export default function ReviewPage() {
   }
 
   if (state === "active") {
-    return <ReviewSession cards={cards} onComplete={handleComplete} mode={mode} />;
+    return (
+      <ReviewSession
+        cards={cards}
+        mode={mode}
+        onRate={handleRate}
+        onComplete={handleComplete}
+      />
+    );
   }
 
   const isReverse = mode === "reverse";
@@ -77,31 +86,33 @@ export default function ReviewPage() {
       {state === "done" && sessionStats && (
         <div className="w-full max-w-sm bg-white rounded-2xl border border-stone-200 p-8 shadow-sm space-y-4">
           <h2 className="text-xl font-bold text-stone-800 text-center">
-            {isReverse ? "Practice complete!" : "Session complete!"}
+            {sessionStats.total === 0 ? "No cards rated" : isReverse ? "Practice complete!" : "Session complete!"}
           </h2>
-          {isReverse && (
+          {isReverse && sessionStats.total > 0 && (
             <p className="text-xs text-center text-stone-400">Practice results don't affect your review schedule.</p>
           )}
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div>
-              <p className="text-2xl font-bold text-green-600">{sessionStats.easy}</p>
-              <p className="text-xs text-stone-500">Easy</p>
+          {sessionStats.total > 0 && (
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-2xl font-bold text-green-600">{sessionStats.easy}</p>
+                <p className="text-xs text-stone-500">Easy</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-amber-600">{sessionStats.hard}</p>
+                <p className="text-xs text-stone-500">Hard</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-red-600">{sessionStats.forgot}</p>
+                <p className="text-xs text-stone-500">Forgot</p>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-amber-600">{sessionStats.hard}</p>
-              <p className="text-xs text-stone-500">Hard</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-red-600">{sessionStats.forgot}</p>
-              <p className="text-xs text-stone-500">Forgot</p>
-            </div>
-          </div>
+          )}
           <div className="flex gap-3 pt-2">
             <button
               onClick={startSession}
               className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium text-sm active:scale-[0.98] transition-transform"
             >
-              Again
+              {sessionStats.total === 0 ? "Try again" : "Again"}
             </button>
             <Link
               href="/"

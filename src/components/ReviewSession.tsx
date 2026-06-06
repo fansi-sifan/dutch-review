@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ReviewCard, Rating } from "@/types";
-import { Eye } from "lucide-react";
+import { Eye, X } from "lucide-react";
 
 type Mode = "forward" | "reverse";
 
 interface Props {
   cards: ReviewCard[];
   mode: Mode;
+  onRate: (result: { itemId: string; rating: Rating; responseTimeMs: number }) => void;
   onComplete: (results: { itemId: string; rating: Rating; responseTimeMs: number }[]) => void;
 }
 
@@ -32,10 +33,10 @@ async function fetchTranslation(text: string, cache: Map<string, string>): Promi
   return null;
 }
 
-export default function ReviewSession({ cards, mode, onComplete }: Props) {
+export default function ReviewSession({ cards, mode, onRate, onComplete }: Props) {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("reveal");
-  const [results, setResults] = useState<{ itemId: string; rating: Rating; responseTimeMs: number }[]>([]);
+  const results = useRef<{ itemId: string; rating: Rating; responseTimeMs: number }[]>([]);
   const [startTime, setStartTime] = useState(Date.now());
   const [translation, setTranslation] = useState<string | null>(null);
   const translationCache = useRef<Map<string, string>>(new Map());
@@ -46,8 +47,7 @@ export default function ReviewSession({ cards, mode, onComplete }: Props) {
     setPhase("reveal");
     setTranslation(null);
     setStartTime(Date.now());
-    const primary = c.sentences[0] ?? "";
-    fetchTranslation(primary, translationCache.current).then(setTranslation);
+    fetchTranslation(c.sentences[0] ?? "", translationCache.current).then(setTranslation);
   }, []);
 
   useEffect(() => {
@@ -59,15 +59,19 @@ export default function ReviewSession({ cards, mode, onComplete }: Props) {
   }
 
   function handleRate(rating: Rating) {
-    const responseTimeMs = Date.now() - startTime;
-    const newResults = [...results, { itemId: card.itemId, rating, responseTimeMs }];
-    setResults(newResults);
+    const result = { itemId: card.itemId, rating, responseTimeMs: Date.now() - startTime };
+    results.current = [...results.current, result];
+    onRate(result);
 
     if (index + 1 >= cards.length) {
-      onComplete(newResults);
+      onComplete(results.current);
     } else {
       setIndex(index + 1);
     }
+  }
+
+  function handleExit() {
+    onComplete(results.current);
   }
 
   if (!card) return null;
@@ -75,9 +79,6 @@ export default function ReviewSession({ cards, mode, onComplete }: Props) {
   const progress = (index / cards.length) * 100;
   const dutch = card.sentences[0] ?? "";
   const isReverse = mode === "reverse";
-
-  // In reverse mode, English is the prompt; Dutch is the reveal.
-  // In forward mode, Dutch is the prompt; English is the reveal.
   const promptReady = isReverse ? translation !== null : true;
 
   return (
@@ -95,7 +96,15 @@ export default function ReviewSession({ cards, mode, onComplete }: Props) {
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 text-sm text-stone-500">
-        <span className="font-medium text-stone-700">
+        <button
+          onClick={handleExit}
+          className="p-1 -ml-1 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 active:bg-stone-200 transition-colors"
+          aria-label="Exit session"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <span className="font-medium text-stone-700 truncate mx-2">
           {card.unitName}
           <span className="ml-2 text-xs font-normal text-stone-400">
             {card.lessonId} · {card.lessonType}
@@ -104,7 +113,8 @@ export default function ReviewSession({ cards, mode, onComplete }: Props) {
             <span className="ml-2 text-xs font-normal text-blue-400">EN→NL</span>
           )}
         </span>
-        <span>{index + 1} / {cards.length}</span>
+
+        <span className="shrink-0">{index + 1} / {cards.length}</span>
       </div>
 
       {/* Card */}
@@ -115,7 +125,6 @@ export default function ReviewSession({ cards, mode, onComplete }: Props) {
 
             {/* Prompt */}
             {isReverse ? (
-              // Reverse: English prompt
               translation ? (
                 <p className="text-2xl font-medium text-stone-800 leading-relaxed text-center italic">
                   {translation}
@@ -124,7 +133,6 @@ export default function ReviewSession({ cards, mode, onComplete }: Props) {
                 <p className="text-stone-300 text-sm italic">translating…</p>
               )
             ) : (
-              // Forward: Dutch prompt
               <p className="text-2xl font-medium text-stone-800 leading-relaxed text-center">
                 {dutch}
               </p>
@@ -134,12 +142,10 @@ export default function ReviewSession({ cards, mode, onComplete }: Props) {
             {phase === "rate" && (
               <div className="w-full border-t border-stone-100 pt-4">
                 {isReverse ? (
-                  // Reverse reveal: Dutch
                   <p className="text-center text-lg font-medium text-stone-700">
                     {dutch}
                   </p>
                 ) : (
-                  // Forward reveal: English translation
                   translation ? (
                     <p className="text-center text-sm text-stone-400 italic">
                       {translation}
