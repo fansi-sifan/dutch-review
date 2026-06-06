@@ -124,7 +124,12 @@ def parse_column(lines, num_x_min, num_x_max):
             txt = line_text(line)
             # Skip bare numbers — these are page numbers at the bottom of PDF pages
             if txt and not re.match(r"^\d{1,3}$", txt):
-                cur_item["sentences"].append(txt)
+                # If the previous sentence didn't end with punctuation, this is a
+                # wrapped continuation of the same sentence — join rather than split.
+                if cur_item["sentences"] and not re.search(r"[.!?]$", cur_item["sentences"][-1].strip()):
+                    cur_item["sentences"][-1] += " " + txt
+                else:
+                    cur_item["sentences"].append(txt)
 
     flush()
     return segments

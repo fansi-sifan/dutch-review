@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ReviewCard, Rating } from "@/types";
 import { Eye } from "lucide-react";
-import { pickBlankWord } from "@/lib/content";
 
 interface Props {
   cards: ReviewCard[];
@@ -11,7 +10,6 @@ interface Props {
 }
 
 type Phase = "reveal" | "rate";
-type Mode = "flashcard" | "fill-blank";
 
 async function fetchTranslation(text: string, cache: Map<string, string>): Promise<string | null> {
   if (cache.has(text)) return cache.get(text)!;
@@ -36,9 +34,7 @@ export default function ReviewSession({ cards, onComplete }: Props) {
   const [phase, setPhase] = useState<Phase>("reveal");
   const [results, setResults] = useState<{ itemId: string; rating: Rating; responseTimeMs: number }[]>([]);
   const [startTime, setStartTime] = useState(Date.now());
-  const [blank, setBlank] = useState<{ blanked: string; answer: string } | null>(null);
   const [translation, setTranslation] = useState<string | null>(null);
-  const mode = useRef<Mode>("flashcard");
   const translationCache = useRef<Map<string, string>>(new Map());
 
   const card = cards[index];
@@ -48,14 +44,8 @@ export default function ReviewSession({ cards, onComplete }: Props) {
     setTranslation(null);
     setStartTime(Date.now());
 
-    // 60% flashcard, 40% fill-blank
-    const isFillBlank = Math.random() < 0.4;
-    const primary = card.sentences[0] ?? "";
-    const blankResult = isFillBlank ? pickBlankWord(primary) : null;
-    mode.current = blankResult ? "fill-blank" : "flashcard";
-    setBlank(blankResult);
-
     // Pre-fetch translation in background while user reads the card
+    const primary = card.sentences[0] ?? "";
     fetchTranslation(primary, translationCache.current).then(setTranslation);
   }, []);
 
@@ -109,40 +99,17 @@ export default function ReviewSession({ cards, onComplete }: Props) {
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
         <div className="w-full max-w-lg">
 
-          {/* Mode badge */}
-          <div className="flex justify-center mb-6">
-            <span className="text-xs px-3 py-1 rounded-full bg-orange-100 text-orange-700 font-medium tracking-wide uppercase">
-              {mode.current === "fill-blank" ? "Fill in the blank" : "Flashcard"}
-            </span>
-          </div>
-
           {/* Card face */}
           <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 mb-6 min-h-[220px] flex flex-col items-center justify-center gap-4">
 
-            {/* Front: prompt */}
-            <div className="text-center w-full">
-              {mode.current === "fill-blank" && blank && phase === "reveal" ? (
-                <p className="text-2xl font-medium text-stone-800 leading-relaxed">
-                  {blank.blanked}
-                </p>
-              ) : (
-                <p className="text-2xl font-medium text-stone-800 leading-relaxed">
-                  {primary}
-                </p>
-              )}
-            </div>
+            {/* Front: Dutch prompt */}
+            <p className="text-2xl font-medium text-stone-800 leading-relaxed text-center">
+              {primary}
+            </p>
 
-            {/* Back: revealed after Show */}
+            {/* Back: English translation revealed after Show */}
             {phase === "rate" && (
-              <div className="w-full border-t border-stone-100 pt-4 space-y-3">
-                {/* Fill-blank answer highlight */}
-                {mode.current === "fill-blank" && blank && (
-                  <div className="px-4 py-2 bg-orange-50 rounded-lg border border-orange-200 text-center">
-                    <p className="text-orange-700 font-semibold">{blank.answer}</p>
-                  </div>
-                )}
-
-                {/* English translation only */}
+              <div className="w-full border-t border-stone-100 pt-4">
                 {translation ? (
                   <p className="text-center text-sm text-stone-400 italic">
                     {translation}

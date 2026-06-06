@@ -84,8 +84,8 @@ export default function HomePage() {
             <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-2">
               <p className="text-xs text-stone-500 uppercase tracking-wide font-medium">How it works</p>
               <ul className="text-sm text-stone-600 space-y-1.5">
-                <li>🃏 Flashcard or fill-in-the-blank, randomly mixed</li>
-                <li>👁 Reveal the text, then rate yourself</li>
+                <li>🃏 Flashcard: read the Dutch, recall the meaning</li>
+                <li>👁 Reveal the translation, then rate yourself</li>
                 <li>🟢 Easy → see it in weeks · 🔴 Forgot → tomorrow</li>
                 <li>📊 Weak spots tracked automatically</li>
               </ul>
