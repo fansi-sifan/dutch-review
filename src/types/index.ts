@@ -58,4 +58,4 @@ export interface ReviewCard {
   state: CardState | null;  // null = never reviewed before
 }
 
-export type ReviewMode = "flashcard" | "fill-blank" | "listening";
+export type ReviewMode = "flashcard" | "fill-blank";
