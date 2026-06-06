@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import UnitGrid from "@/components/UnitGrid";
 import StatsPanel from "@/components/StatsPanel";
-import { getAllUnits } from "@/lib/content";
+import { getAllUnits, getItemsForUnits } from "@/lib/content";
 import { BookOpen, BarChart2, Map, Languages } from "lucide-react";
 import type { Unit } from "@/types";
 
@@ -100,9 +100,9 @@ export default function HomePage() {
                 Units 1–{unlockedUpTo} unlocked
               </p>
               <p className="text-stone-500 text-sm">
-                {units
-                  .filter((u) => u.unit <= unlockedUpTo)
-                  .reduce((s, u) => s + u.lessons.reduce((ls, l) => ls + l.items.length, 0), 0)}{" "}
+                {getItemsForUnits(
+                  Array.from({ length: unlockedUpTo }, (_, i) => i + 1)
+                ).length}{" "}
                 items available
               </p>
             </div>

@@ -3,6 +3,12 @@ import unitsData from "../../content/units.json";
 
 const data = unitsData as UnitsData;
 
+// Vocab-list items (e.g. "een tandenborstel een tandenborstel tandpasta") have no
+// terminal punctuation and make no sense as flashcards without Rosetta Stone's images.
+function isReviewable(item: Item): boolean {
+  return /[.!?]$/.test((item.sentences[0] ?? "").trimEnd());
+}
+
 export function getAllUnits(): Unit[] {
   return data.units;
 }
@@ -18,6 +24,7 @@ export function getItemsForUnits(unitNums: number[]): ReviewCard[] {
     if (!unitNums.includes(unit.unit)) continue;
     for (const lesson of unit.lessons) {
       for (const item of lesson.items) {
+        if (!isReviewable(item)) continue;
         cards.push({
           itemId: item.id,
           unitId: unit.id,
@@ -63,7 +70,7 @@ export function getItemsByIds(itemIds: string[]): ReviewCard[] {
   for (const unit of data.units) {
     for (const lesson of unit.lessons) {
       for (const item of lesson.items) {
-        if (set.has(item.id)) {
+        if (set.has(item.id) && isReviewable(item)) {
           result.push({
             itemId: item.id,
             unitId: unit.id,
