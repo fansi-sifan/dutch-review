@@ -83,7 +83,6 @@ export default function ReviewSession({ cards, onComplete }: Props) {
 
   const progress = (index / cards.length) * 100;
   const primary = card.sentences[0] ?? "";
-  const rest = card.sentences.slice(1);
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
@@ -143,22 +142,13 @@ export default function ReviewSession({ cards, onComplete }: Props) {
                   </div>
                 )}
 
-                {/* Additional Dutch sentences (variants/context) */}
-                {rest.length > 0 && (
-                  <div className="space-y-1 text-center">
-                    {rest.map((s, i) => (
-                      <p key={i} className="text-stone-500 text-base leading-relaxed">{s}</p>
-                    ))}
-                  </div>
-                )}
-
-                {/* English translation */}
+                {/* English translation only */}
                 {translation ? (
-                  <p className="text-center text-sm text-stone-400 italic pt-1">
+                  <p className="text-center text-sm text-stone-400 italic">
                     {translation}
                   </p>
                 ) : (
-                  <p className="text-center text-xs text-stone-300 italic pt-1">
+                  <p className="text-center text-xs text-stone-300 italic">
                     translating…
                   </p>
                 )}
