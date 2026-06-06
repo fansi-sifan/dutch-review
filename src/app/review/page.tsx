@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import ReviewSession from "@/components/ReviewSession";
 import type { ReviewCard, Rating } from "@/types";
-import { BookOpen, Loader2 } from "lucide-react";
+import { BookOpen, Languages, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 type SessionState = "idle" | "loading" | "active" | "done";
+type Mode = "forward" | "reverse";
 
 export default function ReviewPage() {
   const [state, setState] = useState<SessionState>("idle");
+  const [mode, setMode] = useState<Mode>("forward");
   const [cards, setCards] = useState<ReviewCard[]>([]);
   const [sessionStats, setSessionStats] = useState<{
     total: number;
@@ -17,6 +19,11 @@ export default function ReviewPage() {
     hard: number;
     easy: number;
   } | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setMode((params.get("mode") ?? "forward") as Mode);
+  }, []);
 
   function getUnlockedUnits(): number {
     if (typeof window === "undefined") return 6;
@@ -27,7 +34,7 @@ export default function ReviewPage() {
     setState("loading");
     const unlocked = getUnlockedUnits();
     const units = Array.from({ length: unlocked }, (_, i) => i + 1).join(",");
-    const res = await fetch(`/api/reviews?units=${units}`);
+    const res = await fetch(`/api/reviews?units=${units}&mode=${mode}`);
     const data = await res.json();
     setCards(data.cards);
     setState(data.cards.length > 0 ? "active" : "done");
@@ -36,11 +43,14 @@ export default function ReviewPage() {
   async function handleComplete(
     results: { itemId: string; rating: Rating; responseTimeMs: number }[]
   ) {
-    await fetch("/api/reviews", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(results),
-    });
+    // Only update SRS state for forward sessions
+    if (mode === "forward") {
+      await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(results),
+      });
+    }
 
     const stats = {
       total: results.length,
@@ -53,8 +63,10 @@ export default function ReviewPage() {
   }
 
   if (state === "active") {
-    return <ReviewSession cards={cards} onComplete={handleComplete} />;
+    return <ReviewSession cards={cards} onComplete={handleComplete} mode={mode} />;
   }
+
+  const isReverse = mode === "reverse";
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6 gap-6">
@@ -64,7 +76,12 @@ export default function ReviewPage() {
 
       {state === "done" && sessionStats && (
         <div className="w-full max-w-sm bg-white rounded-2xl border border-stone-200 p-8 shadow-sm space-y-4">
-          <h2 className="text-xl font-bold text-stone-800 text-center">Session complete!</h2>
+          <h2 className="text-xl font-bold text-stone-800 text-center">
+            {isReverse ? "Practice complete!" : "Session complete!"}
+          </h2>
+          {isReverse && (
+            <p className="text-xs text-center text-stone-400">Practice results don't affect your review schedule.</p>
+          )}
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
               <p className="text-2xl font-bold text-green-600">{sessionStats.easy}</p>
@@ -84,7 +101,7 @@ export default function ReviewPage() {
               onClick={startSession}
               className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium text-sm active:scale-[0.98] transition-transform"
             >
-              Review again
+              Again
             </button>
             <Link
               href="/"
@@ -98,14 +115,24 @@ export default function ReviewPage() {
 
       {state === "idle" && (
         <div className="w-full max-w-sm space-y-4 text-center">
-          <BookOpen className="w-12 h-12 text-orange-400 mx-auto" />
-          <h1 className="text-2xl font-bold text-stone-800">Ready to review?</h1>
+          {isReverse
+            ? <Languages className="w-12 h-12 text-blue-400 mx-auto" />
+            : <BookOpen className="w-12 h-12 text-orange-400 mx-auto" />
+          }
+          <h1 className="text-2xl font-bold text-stone-800">
+            {isReverse ? "Reverse Practice" : "Ready to review?"}
+          </h1>
           <p className="text-stone-500 text-sm">
-            Up to 20 cards — due items first, then new vocabulary.
+            {isReverse
+              ? "Translate English → Dutch. Only cards you've already learned."
+              : "Up to 20 cards — due items first, then new vocabulary."
+            }
           </p>
           <button
             onClick={startSession}
-            className="w-full py-4 rounded-2xl bg-orange-500 text-white font-semibold text-lg active:scale-[0.98] transition-transform shadow-sm"
+            className={`w-full py-4 rounded-2xl text-white font-semibold text-lg active:scale-[0.98] transition-transform shadow-sm ${
+              isReverse ? "bg-blue-500" : "bg-orange-500"
+            }`}
           >
             Start session
           </button>

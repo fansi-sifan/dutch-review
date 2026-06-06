@@ -4,8 +4,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { ReviewCard, Rating } from "@/types";
 import { Eye } from "lucide-react";
 
+type Mode = "forward" | "reverse";
+
 interface Props {
   cards: ReviewCard[];
+  mode: Mode;
   onComplete: (results: { itemId: string; rating: Rating; responseTimeMs: number }[]) => void;
 }
 
@@ -24,12 +27,12 @@ async function fetchTranslation(text: string, cache: Map<string, string>): Promi
       return translated;
     }
   } catch {
-    // silent fail — translation is a nice-to-have
+    // silent fail
   }
   return null;
 }
 
-export default function ReviewSession({ cards, onComplete }: Props) {
+export default function ReviewSession({ cards, mode, onComplete }: Props) {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("reveal");
   const [results, setResults] = useState<{ itemId: string; rating: Rating; responseTimeMs: number }[]>([]);
@@ -39,13 +42,11 @@ export default function ReviewSession({ cards, onComplete }: Props) {
 
   const card = cards[index];
 
-  const initCard = useCallback((card: ReviewCard) => {
+  const initCard = useCallback((c: ReviewCard) => {
     setPhase("reveal");
     setTranslation(null);
     setStartTime(Date.now());
-
-    // Pre-fetch translation in background while user reads the card
-    const primary = card.sentences[0] ?? "";
+    const primary = c.sentences[0] ?? "";
     fetchTranslation(primary, translationCache.current).then(setTranslation);
   }, []);
 
@@ -72,15 +73,23 @@ export default function ReviewSession({ cards, onComplete }: Props) {
   if (!card) return null;
 
   const progress = (index / cards.length) * 100;
-  const primary = card.sentences[0] ?? "";
+  const dutch = card.sentences[0] ?? "";
+  const isReverse = mode === "reverse";
+
+  // In reverse mode, English is the prompt; Dutch is the reveal.
+  // In forward mode, Dutch is the prompt; English is the reveal.
+  const promptReady = isReverse ? translation !== null : true;
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
       {/* Progress bar */}
       <div className="h-1 bg-stone-200">
         <div
-          className="h-1 bg-orange-400 transition-all duration-300"
-          style={{ width: `${progress}%` }}
+          className="h-1 transition-all duration-300"
+          style={{
+            width: `${progress}%`,
+            backgroundColor: isReverse ? "#3b82f6" : "#fb923c",
+          }}
         />
       </div>
 
@@ -91,6 +100,9 @@ export default function ReviewSession({ cards, onComplete }: Props) {
           <span className="ml-2 text-xs font-normal text-stone-400">
             {card.lessonId} · {card.lessonType}
           </span>
+          {isReverse && (
+            <span className="ml-2 text-xs font-normal text-blue-400">EN→NL</span>
+          )}
         </span>
         <span>{index + 1} / {cards.length}</span>
       </div>
@@ -99,25 +111,44 @@ export default function ReviewSession({ cards, onComplete }: Props) {
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
         <div className="w-full max-w-lg">
 
-          {/* Card face */}
           <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 mb-6 min-h-[220px] flex flex-col items-center justify-center gap-4">
 
-            {/* Front: Dutch prompt */}
-            <p className="text-2xl font-medium text-stone-800 leading-relaxed text-center">
-              {primary}
-            </p>
+            {/* Prompt */}
+            {isReverse ? (
+              // Reverse: English prompt
+              translation ? (
+                <p className="text-2xl font-medium text-stone-800 leading-relaxed text-center italic">
+                  {translation}
+                </p>
+              ) : (
+                <p className="text-stone-300 text-sm italic">translating…</p>
+              )
+            ) : (
+              // Forward: Dutch prompt
+              <p className="text-2xl font-medium text-stone-800 leading-relaxed text-center">
+                {dutch}
+              </p>
+            )}
 
-            {/* Back: English translation revealed after Show */}
+            {/* Reveal */}
             {phase === "rate" && (
               <div className="w-full border-t border-stone-100 pt-4">
-                {translation ? (
-                  <p className="text-center text-sm text-stone-400 italic">
-                    {translation}
+                {isReverse ? (
+                  // Reverse reveal: Dutch
+                  <p className="text-center text-lg font-medium text-stone-700">
+                    {dutch}
                   </p>
                 ) : (
-                  <p className="text-center text-xs text-stone-300 italic">
-                    translating…
-                  </p>
+                  // Forward reveal: English translation
+                  translation ? (
+                    <p className="text-center text-sm text-stone-400 italic">
+                      {translation}
+                    </p>
+                  ) : (
+                    <p className="text-center text-xs text-stone-300 italic">
+                      translating…
+                    </p>
+                  )
                 )}
               </div>
             )}
@@ -127,7 +158,12 @@ export default function ReviewSession({ cards, onComplete }: Props) {
           {phase === "reveal" && (
             <button
               onClick={handleReveal}
-              className="w-full py-4 rounded-2xl bg-stone-800 text-white font-medium text-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              disabled={!promptReady}
+              className={`w-full py-4 rounded-2xl text-white font-medium text-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform ${
+                promptReady
+                  ? isReverse ? "bg-blue-600" : "bg-stone-800"
+                  : "bg-stone-300 cursor-not-allowed"
+              }`}
             >
               <Eye className="w-5 h-5" />
               Show

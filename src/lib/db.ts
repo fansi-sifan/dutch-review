@@ -146,6 +146,16 @@ export function getDueItems(unlockedUnits: number[], limit = 30): string[] {
   return due.map((r) => r.item_id);
 }
 
+export function getLearnedItemIds(eligibleIds: string[]): string[] {
+  if (!eligibleIds.length) return [];
+  const db = getDb();
+  const rows = db
+    .prepare("SELECT item_id FROM card_states WHERE repetitions >= 1")
+    .all() as { item_id: string }[];
+  const eligible = new Set(eligibleIds);
+  return rows.filter((r) => eligible.has(r.item_id)).map((r) => r.item_id);
+}
+
 export function getAllCardStates(): CardState[] {
   const db = getDb();
   const rows = db

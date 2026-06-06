@@ -5,7 +5,7 @@ import Link from "next/link";
 import UnitGrid from "@/components/UnitGrid";
 import StatsPanel from "@/components/StatsPanel";
 import { getAllUnits } from "@/lib/content";
-import { BookOpen, BarChart2, Map } from "lucide-react";
+import { BookOpen, BarChart2, Map, Languages } from "lucide-react";
 import type { Unit } from "@/types";
 
 type Tab = "review" | "units" | "stats";
@@ -13,6 +13,7 @@ type Tab = "review" | "units" | "stats";
 export default function HomePage() {
   const [tab, setTab] = useState<Tab>("review");
   const [unlockedUpTo, setUnlockedUpTo] = useState(6);
+  const [learnedCount, setLearnedCount] = useState(0);
   const [stats, setStats] = useState<{
     streak: number;
     dueCount: number;
@@ -32,6 +33,14 @@ export default function HomePage() {
   useEffect(() => {
     const saved = parseInt(localStorage.getItem("unlockedUpTo") ?? "6", 10);
     setUnlockedUpTo(saved);
+  }, []);
+
+  useEffect(() => {
+    const unlocked = parseInt(localStorage.getItem("unlockedUpTo") ?? "6", 10);
+    const units = Array.from({ length: unlocked }, (_, i) => i + 1).join(",");
+    fetch(`/api/reviews?units=${units}&mode=reverse`)
+      .then((r) => r.json())
+      .then((d) => setLearnedCount(d.total ?? 0));
   }, []);
 
   useEffect(() => {
@@ -66,6 +75,23 @@ export default function HomePage() {
               className="block w-full py-5 rounded-2xl bg-orange-500 text-white font-bold text-xl text-center shadow-sm active:scale-[0.98] transition-transform"
             >
               Start Review
+            </Link>
+
+            <Link
+              href="/review?mode=reverse"
+              className={`flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-semibold text-base text-center shadow-sm active:scale-[0.98] transition-transform ${
+                learnedCount > 0
+                  ? "bg-blue-500 text-white"
+                  : "bg-stone-200 text-stone-400 pointer-events-none"
+              }`}
+            >
+              <Languages className="w-5 h-5" />
+              Reverse Practice
+              {learnedCount > 0 && (
+                <span className="text-xs font-normal opacity-80">
+                  ({learnedCount} learned)
+                </span>
+              )}
             </Link>
 
             <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-1">
