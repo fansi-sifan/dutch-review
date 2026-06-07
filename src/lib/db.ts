@@ -15,6 +15,12 @@ function getDb(): Database.Database {
   _db.pragma("journal_mode = WAL");
 
   _db.exec(`
+    CREATE TABLE IF NOT EXISTS translations (
+      item_id     TEXT PRIMARY KEY,
+      translation TEXT NOT NULL,
+      fetched_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS card_states (
       item_id         TEXT PRIMARY KEY,
       ease_factor     REAL    NOT NULL DEFAULT 2.5,
@@ -144,6 +150,22 @@ export function getDueItems(unlockedUnits: number[], limit = 30): string[] {
     .all(today, limit) as { item_id: string }[];
 
   return due.map((r) => r.item_id);
+}
+
+export function getCachedTranslations(itemIds: string[]): Record<string, string> {
+  if (!itemIds.length) return {};
+  const db = getDb();
+  const placeholders = itemIds.map(() => "?").join(",");
+  const rows = db
+    .prepare(`SELECT item_id, translation FROM translations WHERE item_id IN (${placeholders})`)
+    .all(...itemIds) as { item_id: string; translation: string }[];
+  return Object.fromEntries(rows.map((r) => [r.item_id, r.translation]));
+}
+
+export function setCachedTranslation(itemId: string, translation: string): void {
+  getDb()
+    .prepare("INSERT OR REPLACE INTO translations (item_id, translation) VALUES (?, ?)")
+    .run(itemId, translation);
 }
 
 export function getLearnedItemIds(eligibleIds: string[]): string[] {

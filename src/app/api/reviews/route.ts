@@ -4,6 +4,7 @@ import {
   getDueItems,
   getAllCardStates,
   getLearnedItemIds,
+  getCachedTranslations,
 } from "@/lib/db";
 import { getItemsByIds, getNewItems, getItemsForUnits } from "@/lib/content";
 import type { ReviewResult } from "@/types";
@@ -19,6 +20,8 @@ export async function GET(req: NextRequest) {
   const allStates = getAllCardStates();
   const stateMap = Object.fromEntries(allStates.map((s) => [s.itemId, s]));
 
+  let cards;
+
   if (mode === "reverse") {
     const allItems = getItemsForUnits(unlockedUnits);
     const learnedIds = getLearnedItemIds(allItems.map((i) => i.itemId));
@@ -26,22 +29,26 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ cards: [], total: 0 });
     }
     const shuffled = [...learnedIds].sort(() => Math.random() - 0.5).slice(0, sessionSize);
-    const cards = getItemsByIds(shuffled).map((c) => ({ ...c, state: stateMap[c.itemId] ?? null }));
-    return NextResponse.json({ cards, total: cards.length });
+    cards = getItemsByIds(shuffled).map((c) => ({ ...c, state: stateMap[c.itemId] ?? null }));
+  } else {
+    // Forward mode: due cards first, then new items
+    const dueIds = getDueItems(unlockedUnits, sessionSize);
+    const dueCards = getItemsByIds(dueIds);
+    const seenIds = new Set(allStates.map((s) => s.itemId));
+    const needed = Math.max(0, sessionSize - dueCards.length);
+    const newCards = getNewItems(unlockedUnits, seenIds, needed);
+    const withState = dueCards.map((c) => ({ ...c, state: stateMap[c.itemId] ?? null }));
+    cards = [...withState, ...newCards];
   }
 
-  // Forward mode: due cards first, then new items
-  const dueIds = getDueItems(unlockedUnits, sessionSize);
-  const dueCards = getItemsByIds(dueIds);
+  // Attach any cached translations so the client doesn't need to re-fetch them
+  const translationMap = getCachedTranslations(cards.map((c) => c.itemId));
+  const cardsWithTranslations = cards.map((c) => ({
+    ...c,
+    translation: translationMap[c.itemId] ?? undefined,
+  }));
 
-  const seenIds = new Set(allStates.map((s) => s.itemId));
-  const needed = Math.max(0, sessionSize - dueCards.length);
-  const newCards = getNewItems(unlockedUnits, seenIds, needed);
-
-  const withState = dueCards.map((c) => ({ ...c, state: stateMap[c.itemId] ?? null }));
-  const cards = [...withState, ...newCards];
-
-  return NextResponse.json({ cards, total: cards.length });
+  return NextResponse.json({ cards: cardsWithTranslations, total: cardsWithTranslations.length });
 }
 
 // POST /api/reviews  body: ReviewResult[]  (only called for forward sessions)

@@ -15,8 +15,11 @@ interface Props {
 
 type Phase = "reveal" | "rate";
 
-async function fetchTranslation(text: string, cache: Map<string, string>): Promise<string | null> {
-  if (cache.has(text)) return cache.get(text)!;
+async function fetchTranslation(
+  text: string,
+  cache: Map<string, string>
+): Promise<{ translation: string; fresh: boolean } | null> {
+  if (cache.has(text)) return { translation: cache.get(text)!, fresh: false };
   try {
     const res = await fetch(
       `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=nl|en`
@@ -25,7 +28,7 @@ async function fetchTranslation(text: string, cache: Map<string, string>): Promi
     const translated: string = data?.responseData?.translatedText;
     if (translated) {
       cache.set(text, translated);
-      return translated;
+      return { translation: translated, fresh: true };
     }
   } catch {
     // silent fail
@@ -43,12 +46,32 @@ export default function ReviewSession({ cards, mode, onRate, onComplete }: Props
 
   const card = cards[index];
 
+  // Pre-populate cache from translations bundled in the card response (from DB)
+  useEffect(() => {
+    for (const c of cards) {
+      if (c.translation) {
+        translationCache.current.set(c.sentences[0] ?? "", c.translation);
+      }
+    }
+  }, [cards]);
+
   const initCard = useCallback((c: ReviewCard) => {
     setPhase("reveal");
     setTranslation(null);
     setStartTime(Date.now());
-    fetchTranslation(c.sentences[0] ?? "", translationCache.current).then(setTranslation);
-  }, []);
+    fetchTranslation(c.sentences[0] ?? "", translationCache.current).then((result) => {
+      if (!result) return;
+      setTranslation(result.translation);
+      if (result.fresh) {
+        // Persist new translation to DB so next session is instant
+        fetch("/api/translations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ itemId: c.itemId, translation: result.translation }),
+        });
+      }
+    });
+  }, [cards]);
 
   useEffect(() => {
     if (card) initCard(card);
