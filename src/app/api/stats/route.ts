@@ -3,9 +3,12 @@ import { getWeakItems, getReviewStreak, getReviewCalendar, getAllCardStates } fr
 import { getItemsByIds } from "@/lib/content";
 
 export async function GET() {
-  const streak = getReviewStreak();
-  const calendar = getReviewCalendar(60);
-  const weakRaw = getWeakItems(20);
+  const [streak, calendar, weakRaw, allStates] = await Promise.all([
+    getReviewStreak(),
+    getReviewCalendar(60),
+    getWeakItems(20),
+    getAllCardStates(),
+  ]);
 
   const weakCards = getItemsByIds(weakRaw.map((w) => w.itemId));
   const weakItems = weakRaw.map((w) => {
@@ -19,7 +22,6 @@ export async function GET() {
     };
   });
 
-  const allStates = getAllCardStates();
   const today = new Date().toISOString().split("T")[0];
   const dueCount = allStates.filter((s) => s.nextReview <= today).length;
   const totalSeen = allStates.length;

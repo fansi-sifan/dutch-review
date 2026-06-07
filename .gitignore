@@ -48,3 +48,4 @@ next-env.d.ts
 # audio files are large (~580MB) — served locally from public/audio/
 # and from Cloudflare R2 in production. Never commit to git.
 /public/audio/
+.env.local

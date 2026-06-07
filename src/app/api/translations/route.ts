@@ -7,6 +7,6 @@ export async function POST(req: NextRequest) {
   if (!itemId || !translation) {
     return NextResponse.json({ error: "missing fields" }, { status: 400 });
   }
-  setCachedTranslation(itemId, translation);
+  await setCachedTranslation(itemId, translation);
   return NextResponse.json({ ok: true });
 }
