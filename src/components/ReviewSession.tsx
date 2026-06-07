@@ -63,7 +63,6 @@ export default function ReviewSession({ cards, mode, onRate, onComplete }: Props
       if (!result) return;
       setTranslation(result.translation);
       if (result.fresh) {
-        // Persist new translation to DB so next session is instant
         fetch("/api/translations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
