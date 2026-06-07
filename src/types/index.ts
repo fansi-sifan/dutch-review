@@ -60,3 +60,20 @@ export interface ReviewCard {
 }
 
 export type ReviewMode = "flashcard";
+
+// A card that has been reviewed at least once, enriched for the Cards tab
+export interface StudiedCard {
+  itemId: string;
+  dutch: string;
+  english: string | null;
+  unitId: string;
+  unitName: string;
+  isCustom: boolean;
+  interval: number;
+  repetitions: number;
+  nextReview: string;
+  totalReviews: number;
+  correctReviews: number;
+  isDue: boolean;
+  forgetRate: number;   // 0–1; (totalReviews - correctReviews) / totalReviews
+}

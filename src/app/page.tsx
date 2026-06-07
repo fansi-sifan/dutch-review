@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import UnitGrid from "@/components/UnitGrid";
 import StatsPanel from "@/components/StatsPanel";
+import CardsList from "@/components/CardsList";
 import { getAllUnits, getItemsForUnits } from "@/lib/content";
 import { BookOpen, BarChart2, Map, Languages, Plus, X, ChevronDown, ChevronUp } from "lucide-react";
 import type { Unit } from "@/types";
@@ -147,13 +148,13 @@ export default function HomePage() {
                         value={dutch}
                         onChange={(e) => setDutch(e.target.value)}
                         placeholder="Dutch sentence *"
-                        className="w-full px-3 py-2 rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        className="w-full px-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-300"
                       />
                       <input
                         value={english}
                         onChange={(e) => setEnglish(e.target.value)}
                         placeholder="English translation (optional)"
-                        className="w-full px-3 py-2 rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        className="w-full px-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-300"
                       />
                       <div className="flex gap-2">
                         <button
@@ -227,9 +228,16 @@ export default function HomePage() {
         )}
 
         {tab === "stats" && (
-          stats
-            ? <StatsPanel {...stats} />
-            : <div className="flex items-center justify-center h-48 text-stone-400 text-sm">Loading stats…</div>
+          <div className="space-y-6">
+            {stats
+              ? <StatsPanel {...stats} />
+              : <div className="flex items-center justify-center h-48 text-stone-400 text-sm">Loading stats…</div>
+            }
+            <div>
+              <p className="px-5 text-xs text-stone-500 uppercase tracking-wide font-medium mb-3">All studied cards</p>
+              <CardsList />
+            </div>
+          </div>
         )}
       </main>
 
