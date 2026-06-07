@@ -13,9 +13,22 @@ function getClient(): Client {
   return _client;
 }
 
+export interface CustomCard {
+  id: string;
+  dutch: string;
+  english: string | null;
+  createdAt: string;
+}
+
 async function ensureSchema(client: Client): Promise<void> {
   await client.batch(
     [
+      `CREATE TABLE IF NOT EXISTS custom_cards (
+        id         TEXT PRIMARY KEY,
+        dutch      TEXT NOT NULL,
+        english    TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
       `CREATE TABLE IF NOT EXISTS translations (
         item_id     TEXT PRIMARY KEY,
         translation TEXT NOT NULL,
@@ -217,4 +230,69 @@ export async function getReviewCalendar(days = 60): Promise<Record<string, numbe
     args: [`-${days} days`],
   });
   return Object.fromEntries(res.rows.map((r) => [r.day as string, r.count as number]));
+}
+
+// ── Custom cards ──────────────────────────────────────────────────────────────
+
+export async function createCustomCard(dutch: string, english?: string): Promise<string> {
+  const id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const db = await getDb();
+  await db.execute({
+    sql: "INSERT INTO custom_cards (id, dutch, english) VALUES (?, ?, ?)",
+    args: [id, dutch.trim(), english?.trim() ?? null],
+  });
+  return id;
+}
+
+export async function getCustomCards(): Promise<CustomCard[]> {
+  const db = await getDb();
+  const res = await db.execute("SELECT * FROM custom_cards ORDER BY created_at DESC");
+  return res.rows.map((r) => ({
+    id: r.id as string,
+    dutch: r.dutch as string,
+    english: r.english as string | null,
+    createdAt: r.created_at as string,
+  }));
+}
+
+export async function getCustomCardsByIds(ids: string[]): Promise<CustomCard[]> {
+  if (!ids.length) return [];
+  const db = await getDb();
+  const placeholders = ids.map(() => "?").join(",");
+  const res = await db.execute({
+    sql: `SELECT * FROM custom_cards WHERE id IN (${placeholders})`,
+    args: ids,
+  });
+  return res.rows.map((r) => ({
+    id: r.id as string,
+    dutch: r.dutch as string,
+    english: r.english as string | null,
+    createdAt: r.created_at as string,
+  }));
+}
+
+export async function getNewCustomCards(seenIds: Set<string>): Promise<CustomCard[]> {
+  const db = await getDb();
+  const res = await db.execute("SELECT * FROM custom_cards ORDER BY created_at ASC");
+  return res.rows
+    .filter((r) => !seenIds.has(r.id as string))
+    .map((r) => ({
+      id: r.id as string,
+      dutch: r.dutch as string,
+      english: r.english as string | null,
+      createdAt: r.created_at as string,
+    }));
+}
+
+export async function deleteCustomCard(id: string): Promise<void> {
+  const db = await getDb();
+  await db.batch(
+    [
+      { sql: "DELETE FROM custom_cards WHERE id = ?", args: [id] },
+      { sql: "DELETE FROM card_states WHERE item_id = ?", args: [id] },
+      { sql: "DELETE FROM review_log WHERE item_id = ?", args: [id] },
+      { sql: "DELETE FROM translations WHERE item_id = ?", args: [id] },
+    ],
+    "write"
+  );
 }

@@ -5,9 +5,27 @@ import {
   getAllCardStates,
   getLearnedItemIds,
   getCachedTranslations,
+  getCustomCardsByIds,
+  getNewCustomCards,
+  type CustomCard,
 } from "@/lib/db";
 import { getItemsByIds, getNewItems, getItemsForUnits } from "@/lib/content";
-import type { ReviewResult } from "@/types";
+import type { ReviewCard, ReviewResult } from "@/types";
+
+function customToReviewCard(card: CustomCard, state: ReviewCard["state"]): ReviewCard {
+  return {
+    itemId: card.id,
+    unitId: "custom",
+    unitName: "My Vocabulary",
+    lessonId: "custom",
+    lessonType: "Custom",
+    sentences: [card.dutch],
+    audioFolder: "",
+    lessonAudio: {},
+    state,
+    translation: card.english ?? undefined,
+  };
+}
 
 // GET /api/reviews?units=1,2,3,4,5,6[&mode=reverse]
 export async function GET(req: NextRequest) {
@@ -19,31 +37,59 @@ export async function GET(req: NextRequest) {
 
   const allStates = await getAllCardStates();
   const stateMap = Object.fromEntries(allStates.map((s) => [s.itemId, s]));
+  const seenIds = new Set(allStates.map((s) => s.itemId));
 
-  let cards;
+  let cards: ReviewCard[];
 
   if (mode === "reverse") {
     const allItems = getItemsForUnits(unlockedUnits);
-    const learnedIds = await getLearnedItemIds(allItems.map((i) => i.itemId));
-    if (!learnedIds.length) {
-      return NextResponse.json({ cards: [], total: 0 });
-    }
-    const shuffled = [...learnedIds].sort(() => Math.random() - 0.5).slice(0, sessionSize);
-    cards = getItemsByIds(shuffled).map((c) => ({ ...c, state: stateMap[c.itemId] ?? null }));
+    const allEligibleIds = [...allItems.map((i) => i.itemId), ...Array.from(seenIds).filter(id => id.startsWith("custom-"))];
+    const learnedIds = await getLearnedItemIds(allEligibleIds);
+
+    const customLearnedIds = learnedIds.filter((id) => id.startsWith("custom-"));
+    const contentLearnedIds = learnedIds.filter((id) => !id.startsWith("custom-"));
+
+    if (!learnedIds.length) return NextResponse.json({ cards: [], total: 0 });
+
+    const shuffledContent = [...contentLearnedIds].sort(() => Math.random() - 0.5).slice(0, sessionSize);
+    const shuffledCustom = [...customLearnedIds].sort(() => Math.random() - 0.5);
+    const allShuffled = [...shuffledContent, ...shuffledCustom].sort(() => Math.random() - 0.5).slice(0, sessionSize);
+
+    const contentCards = getItemsByIds(allShuffled.filter(id => !id.startsWith("custom-")));
+    const customRaw = await getCustomCardsByIds(allShuffled.filter(id => id.startsWith("custom-")));
+    const customCards = customRaw.map(c => customToReviewCard(c, stateMap[c.id] ?? null));
+
+    cards = [...contentCards.map(c => ({ ...c, state: stateMap[c.itemId] ?? null })), ...customCards];
   } else {
-    const dueIds = await getDueItems(unlockedUnits, sessionSize);
-    const dueCards = getItemsByIds(dueIds);
-    const seenIds = new Set(allStates.map((s) => s.itemId));
-    const needed = Math.max(0, sessionSize - dueCards.length);
-    const newCards = getNewItems(unlockedUnits, seenIds, needed);
-    const withState = dueCards.map((c) => ({ ...c, state: stateMap[c.itemId] ?? null }));
-    cards = [...withState, ...newCards];
+    // Due cards (content + custom)
+    const allDueIds = await getDueItems(unlockedUnits, sessionSize);
+    const customDueIds = allDueIds.filter((id) => id.startsWith("custom-"));
+    const contentDueIds = allDueIds.filter((id) => !id.startsWith("custom-"));
+
+    const contentDueCards = getItemsByIds(contentDueIds).map(c => ({ ...c, state: stateMap[c.itemId] ?? null }));
+    const customDueRaw = await getCustomCardsByIds(customDueIds);
+    const customDueCards = customDueRaw.map(c => customToReviewCard(c, stateMap[c.id] ?? null));
+
+    const dueCards = [...contentDueCards, ...customDueCards];
+    const remaining = Math.max(0, sessionSize - dueCards.length);
+
+    // New custom cards first (user just added them, prioritize learning)
+    const newCustomRaw = await getNewCustomCards(seenIds);
+    const newCustomCards = newCustomRaw.slice(0, remaining).map(c => customToReviewCard(c, null));
+
+    // Fill rest with new content cards
+    const remainingAfterCustom = Math.max(0, remaining - newCustomCards.length);
+    const newContentCards = getNewItems(unlockedUnits, seenIds, remainingAfterCustom);
+
+    cards = [...dueCards, ...newCustomCards, ...newContentCards];
   }
 
-  const translationMap = await getCachedTranslations(cards.map((c) => c.itemId));
+  // Attach cached translations (skip custom cards that already have english)
+  const idsNeedingTranslation = cards.filter(c => !c.translation).map(c => c.itemId);
+  const translationMap = await getCachedTranslations(idsNeedingTranslation);
   const cardsWithTranslations = cards.map((c) => ({
     ...c,
-    translation: translationMap[c.itemId] ?? undefined,
+    translation: c.translation ?? translationMap[c.itemId] ?? undefined,
   }));
 
   return NextResponse.json({ cards: cardsWithTranslations, total: cardsWithTranslations.length });
