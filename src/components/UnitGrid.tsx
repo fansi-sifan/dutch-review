@@ -20,12 +20,13 @@ export default function UnitGrid({ units, unlockedUpTo, onUnlockChange }: Props)
         return (
           <button
             key={unit.unit}
-            onClick={() => unlocked || onUnlockChange(unit.unit)}
+            onClick={() => onUnlockChange(unit.unit)}
             className={`
               relative rounded-2xl p-4 text-left border transition-all
+              active:scale-[0.98] hover:shadow-md
               ${unlocked
-                ? "bg-white border-stone-200 shadow-sm hover:shadow-md active:scale-[0.98]"
-                : "bg-stone-100 border-stone-200 opacity-60 cursor-default"}
+                ? "bg-white border-stone-200 shadow-sm"
+                : "bg-stone-100 border-stone-200 opacity-60"}
               ${isCurrent ? "ring-2 ring-orange-400" : ""}
             `}
           >
