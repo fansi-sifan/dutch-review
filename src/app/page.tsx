@@ -17,6 +17,8 @@ export default function HomePage() {
   const [tab, setTab] = useState<Tab>("review");
   const [unlockedUpTo, setUnlockedUpTo] = useState(6);
   const [learnedCount, setLearnedCount] = useState(0);
+  const [studiedCount, setStudiedCount] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [stats, setStats] = useState<{
     streak: number; dueCount: number; totalSeen: number;
     calendar: Record<string, number>;
@@ -47,6 +49,9 @@ export default function HomePage() {
     fetch("/api/custom-cards")
       .then((r) => r.json())
       .then((d) => setCustomCards(d.cards ?? []));
+    fetch(`/api/counts?units=${unitList}`)
+      .then((r) => r.json())
+      .then((d) => { setStudiedCount(d.studied ?? 0); setTotalCount(d.total ?? 0); });
   }, []);
 
   useEffect(() => {
@@ -92,6 +97,25 @@ export default function HomePage() {
       <main className="flex-1 overflow-y-auto pb-24">
         {tab === "review" && (
           <div className="px-5 space-y-4 pt-2">
+
+            {/* Progress status bar */}
+            {studiedCount !== null && totalCount !== null && totalCount > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-baseline">
+                  <p className="text-xs font-medium text-stone-500">
+                    <span className="text-stone-800 font-semibold">{studiedCount}</span> / {totalCount} cards studied
+                  </p>
+                  <p className="text-xs text-stone-400">{Math.round(studiedCount / totalCount * 100)}%</p>
+                </div>
+                <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-orange-400 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, studiedCount / totalCount * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             <Link
               href="/review"
               className="block w-full py-5 rounded-2xl bg-orange-500 text-white font-bold text-xl text-center shadow-sm active:scale-[0.98] transition-transform"
