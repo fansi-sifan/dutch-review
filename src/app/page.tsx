@@ -148,13 +148,13 @@ export default function HomePage() {
                         value={dutch}
                         onChange={(e) => setDutch(e.target.value)}
                         placeholder="Dutch sentence *"
-                        className="w-full px-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-300"
                       />
                       <input
                         value={english}
                         onChange={(e) => setEnglish(e.target.value)}
                         placeholder="English translation (optional)"
-                        className="w-full px-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-300"
                       />
                       <div className="flex gap-2">
                         <button
