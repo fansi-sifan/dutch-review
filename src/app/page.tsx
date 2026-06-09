@@ -43,15 +43,16 @@ export default function HomePage() {
   useEffect(() => {
     const unlocked = parseInt(localStorage.getItem("unlockedUpTo") ?? "6", 10);
     const unitList = Array.from({ length: unlocked }, (_, i) => i + 1).join(",");
-    fetch(`/api/reviews?units=${unitList}&mode=reverse`)
-      .then((r) => r.json())
-      .then((d) => setLearnedCount(d.total ?? 0));
     fetch("/api/custom-cards")
       .then((r) => r.json())
       .then((d) => setCustomCards(d.cards ?? []));
     fetch(`/api/counts?units=${unitList}`)
       .then((r) => r.json())
-      .then((d) => { setStudiedCount(d.studied ?? 0); setTotalCount(d.total ?? 0); });
+      .then((d) => {
+        setLearnedCount(d.learned ?? 0);
+        setStudiedCount(d.studied ?? 0);
+        setTotalCount(d.total ?? 0);
+      });
   }, []);
 
   useEffect(() => {

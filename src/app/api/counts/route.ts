@@ -12,8 +12,11 @@ export async function GET(req: NextRequest) {
     Promise.resolve(getItemsForUnits(unlockedUnits)),
   ]);
 
+  const learnedCount = allStates.filter((s) => s.repetitions >= 1).length;
+
   return NextResponse.json({
     studied: allStates.length,
+    learned: learnedCount,
     total: contentItems.length,
   });
 }

@@ -51,9 +51,9 @@ export async function GET(req: NextRequest) {
 
     if (!learnedIds.length) return NextResponse.json({ cards: [], total: 0 });
 
-    const shuffledContent = [...contentLearnedIds].sort(() => Math.random() - 0.5).slice(0, sessionSize);
-    const shuffledCustom = [...customLearnedIds].sort(() => Math.random() - 0.5);
-    const allShuffled = [...shuffledContent, ...shuffledCustom].sort(() => Math.random() - 0.5).slice(0, sessionSize);
+    // Return ALL learned cards shuffled — no cap.
+    // Reverse practice is a finite session; the client uses fetchMore → [] to end naturally.
+    const allShuffled = [...contentLearnedIds, ...customLearnedIds].sort(() => Math.random() - 0.5);
 
     const contentCards = getItemsByIds(allShuffled.filter(id => !id.startsWith("custom-")));
     const customRaw = await getCustomCardsByIds(allShuffled.filter(id => id.startsWith("custom-")));

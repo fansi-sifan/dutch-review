@@ -44,8 +44,10 @@ export default function ReviewPage() {
     }
   }
 
-  // Called by ReviewSession each time it needs more cards
+  // Called by ReviewSession each time it needs more cards.
+  // Reverse practice is a finite set — return [] so it ends naturally.
   const fetchMore = useCallback(async (): Promise<ReviewCard[]> => {
+    if (mode === "reverse") return [];
     const res = await fetch(`/api/reviews?units=${getUnitsParam()}&mode=${mode}`);
     const data = await res.json();
     return data.cards ?? [];
