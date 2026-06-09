@@ -76,9 +76,11 @@ export async function GET(req: NextRequest) {
 
     const dueCards = [...contentDueCards, ...customDueCards];
 
-    // Cards with repetitions >= 2 are established enough to practice in reverse
+    // Cards seen at least twice (total, not streak) are fair game for reverse.
+    // Using totalReviews instead of repetitions because repetitions resets on
+    // "forgot", meaning frequently-forgotten cards would never qualify otherwise.
     const eligibleForReverse = dueCards.filter(
-      (c) => (stateMap[c.itemId]?.repetitions ?? 0) >= 2
+      (c) => (stateMap[c.itemId]?.totalReviews ?? 0) >= 2
     );
     const reverseSet = new Set(
       eligibleForReverse
