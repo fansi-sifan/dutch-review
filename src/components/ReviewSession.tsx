@@ -102,6 +102,8 @@ export default function ReviewSession({
   }, [index, queue.length, allDone, onComplete]);
 
   const card = queue[index];
+  // Per-card mode: use card's reviewMode if set, fall back to session mode
+  const cardMode = card ? (card.reviewMode ?? mode) : mode;
 
   const initCard = useCallback((c: ReviewCard) => {
     setPhase("reveal");
@@ -157,14 +159,14 @@ export default function ReviewSession({
   }
 
   const dutch = card.sentences[0] ?? "";
-  const isReverse = mode === "reverse";
+  const isReverse = cardMode === "reverse";
   const promptReady = isReverse ? translation !== null : true;
   const reviewed = results.current.length;
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
-      {/* Thin mode accent */}
-      <div className={`h-1 ${isReverse ? "bg-blue-500" : "bg-orange-400"}`} />
+      {/* Thin accent — changes per card */}
+      <div className={`h-1 transition-colors duration-300 ${isReverse ? "bg-blue-500" : "bg-orange-400"}`} />
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 text-sm text-stone-500">
@@ -182,7 +184,7 @@ export default function ReviewSession({
             {card.lessonId} · {card.lessonType}
           </span>
           {isReverse && (
-            <span className="ml-2 text-xs font-normal text-blue-400">EN→NL</span>
+            <span className="ml-2 text-xs font-semibold text-blue-400">EN→NL</span>
           )}
         </span>
 

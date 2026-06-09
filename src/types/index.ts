@@ -55,8 +55,9 @@ export interface ReviewCard {
   sentences: string[];
   audioFolder: string;
   lessonAudio: Record<string, string>;
-  state: CardState | null;  // null = never reviewed before
-  translation?: string;     // pre-fetched from DB cache, if available
+  state: CardState | null;          // null = never reviewed before
+  translation?: string;             // pre-fetched from DB cache, if available
+  reviewMode?: "forward" | "reverse"; // per-card override; undefined = use session default
 }
 
 export type ReviewMode = "flashcard";

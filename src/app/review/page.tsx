@@ -53,9 +53,8 @@ export default function ReviewPage() {
     return data.cards ?? [];
   }, [mode]);
 
-  // Fires immediately per card in forward mode
+  // Fires immediately per card — saves for all modes now that reverse is integrated
   function handleRate(result: { itemId: string; rating: Rating; responseTimeMs: number }) {
-    if (mode !== "forward") return;
     fetch("/api/reviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -111,8 +110,6 @@ export default function ReviewPage() {
             <p className="text-xs text-center text-stone-400">
               {sessionStats.allDone
                 ? "Nothing left due — check back tomorrow."
-                : isReverse
-                ? "Practice results don't affect your review schedule."
                 : `${sessionStats.total} cards reviewed.`}
             </p>
           )}
@@ -162,8 +159,8 @@ export default function ReviewPage() {
           </h1>
           <p className="text-stone-500 text-sm">
             {isReverse
-              ? "Translate English → Dutch. Only cards you've already learned."
-              : "Keep going as long as you like — exit anytime to save progress."
+              ? "All learned cards, English → Dutch. Ratings count toward your schedule."
+              : "New words + due reviews. Some cards flip to EN→NL once you've seen them enough."
             }
           </p>
           <button

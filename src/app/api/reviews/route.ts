@@ -61,9 +61,10 @@ export async function GET(req: NextRequest) {
 
     cards = [...contentCards.map(c => ({ ...c, state: stateMap[c.itemId] ?? null })), ...customCards];
   } else {
-    // 50/50 mix: 10 due cards + 10 new cards per batch
-    const newCardSlots = 10;
-    const maxDue = sessionSize - newCardSlots; // 10
+    // Blended session: 12 due (up to 4 shown in reverse) + 8 new
+    const newCardSlots = 8;
+    const maxDue = sessionSize - newCardSlots;   // 12
+    const reverseSlots = 4; // how many due cards to flip to reverse
 
     const allDueIds = await getDueItems(unlockedUnits, maxDue);
     const customDueIds = allDueIds.filter((id) => id.startsWith("custom-"));
@@ -74,18 +75,35 @@ export async function GET(req: NextRequest) {
     const customDueCards = customDueRaw.map(c => customToReviewCard(c, stateMap[c.id] ?? null));
 
     const dueCards = [...contentDueCards, ...customDueCards];
-    // Remaining slots: at least newCardSlots, or more if due pile was small
-    const remaining = Math.max(newCardSlots, sessionSize - dueCards.length);
 
-    // New custom cards first (user just added them, prioritize learning)
+    // Cards with repetitions >= 2 are established enough to practice in reverse
+    const eligibleForReverse = dueCards.filter(
+      (c) => (stateMap[c.itemId]?.repetitions ?? 0) >= 2
+    );
+    const reverseSet = new Set(
+      eligibleForReverse
+        .sort(() => Math.random() - 0.5)
+        .slice(0, reverseSlots)
+        .map((c) => c.itemId)
+    );
+
+    const taggedDue = dueCards.map((c) => ({
+      ...c,
+      reviewMode: reverseSet.has(c.itemId) ? ("reverse" as const) : ("forward" as const),
+    }));
+
+    // New cards: always forward
+    const remaining = Math.max(newCardSlots, sessionSize - taggedDue.length);
     const newCustomRaw = await getNewCustomCards(seenIds);
-    const newCustomCards = newCustomRaw.slice(0, remaining).map(c => customToReviewCard(c, null));
-
-    // Fill rest with new content cards
+    const newCustomCards = newCustomRaw.slice(0, remaining).map(c => ({
+      ...customToReviewCard(c, null), reviewMode: "forward" as const,
+    }));
     const remainingAfterCustom = Math.max(0, remaining - newCustomCards.length);
-    const newContentCards = getNewItems(unlockedUnits, seenIds, remainingAfterCustom);
+    const newContentCards = getNewItems(unlockedUnits, seenIds, remainingAfterCustom).map(c => ({
+      ...c, reviewMode: "forward" as const,
+    }));
 
-    cards = [...dueCards, ...newCustomCards, ...newContentCards];
+    cards = [...taggedDue, ...newCustomCards, ...newContentCards];
   }
 
   // Attach cached translations (skip custom cards that already have english)
