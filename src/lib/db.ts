@@ -196,6 +196,7 @@ export async function getWeakItems(limit = 20): Promise<{ itemId: string; forget
                  CAST(total_reviews - correct_reviews AS REAL) / total_reviews AS forget_rate
           FROM card_states
           WHERE total_reviews >= 3
+            AND total_reviews > correct_reviews
           ORDER BY forget_rate DESC
           LIMIT ?`,
     args: [limit],
