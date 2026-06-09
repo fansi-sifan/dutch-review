@@ -2,18 +2,25 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ReviewCard, Rating } from "@/types";
-import { Eye, X } from "lucide-react";
+import { Eye, X, Loader2 } from "lucide-react";
 
 type Mode = "forward" | "reverse";
 
 interface Props {
-  cards: ReviewCard[];
+  initialCards: ReviewCard[];
   mode: Mode;
+  fetchMore: () => Promise<ReviewCard[]>;
   onRate: (result: { itemId: string; rating: Rating; responseTimeMs: number }) => void;
-  onComplete: (results: { itemId: string; rating: Rating; responseTimeMs: number }[]) => void;
+  onComplete: (
+    results: { itemId: string; rating: Rating; responseTimeMs: number }[],
+    allDone: boolean
+  ) => void;
 }
 
 type Phase = "reveal" | "rate";
+
+// How many cards left before we silently fetch the next batch
+const LOW_WATER_MARK = 3;
 
 async function fetchTranslation(
   text: string,
@@ -36,24 +43,65 @@ async function fetchTranslation(
   return null;
 }
 
-export default function ReviewSession({ cards, mode, onRate, onComplete }: Props) {
+function seedCache(cards: ReviewCard[], cache: Map<string, string>) {
+  for (const c of cards) {
+    if (c.translation) cache.set(c.sentences[0] ?? "", c.translation);
+  }
+}
+
+export default function ReviewSession({
+  initialCards,
+  mode,
+  fetchMore,
+  onRate,
+  onComplete,
+}: Props) {
+  const [queue, setQueue] = useState<ReviewCard[]>(initialCards);
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("reveal");
-  const results = useRef<{ itemId: string; rating: Rating; responseTimeMs: number }[]>([]);
-  const [startTime, setStartTime] = useState(Date.now());
   const [translation, setTranslation] = useState<string | null>(null);
-  const translationCache = useRef<Map<string, string>>(new Map());
+  const [startTime, setStartTime] = useState(Date.now());
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [allDone, setAllDone] = useState(false);
 
-  const card = cards[index];
+  const results = useRef<{ itemId: string; rating: Rating; responseTimeMs: number }[]>([]);
+  const translationCache = useRef(new Map<string, string>());
+  const fetchingRef = useRef(false);
+  const completedRef = useRef(false);
 
-  // Pre-populate cache from translations bundled in the card response (from DB)
+  // Seed translation cache from initial cards
   useEffect(() => {
-    for (const c of cards) {
-      if (c.translation) {
-        translationCache.current.set(c.sentences[0] ?? "", c.translation);
-      }
+    seedCache(initialCards, translationCache.current);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pre-fetch next batch when running low
+  useEffect(() => {
+    const remaining = queue.length - index;
+    if (remaining <= LOW_WATER_MARK && !fetchingRef.current && !allDone) {
+      fetchingRef.current = true;
+      setLoadingMore(true);
+      fetchMore().then((newCards) => {
+        if (newCards.length === 0) {
+          setAllDone(true);
+        } else {
+          seedCache(newCards, translationCache.current);
+          setQueue((prev) => [...prev, ...newCards]);
+        }
+        setLoadingMore(false);
+        fetchingRef.current = false;
+      });
     }
-  }, [cards]);
+  }, [index, queue.length, allDone, fetchMore]);
+
+  // Detect "genuinely finished" — queue exhausted AND no more cards coming
+  useEffect(() => {
+    if (!completedRef.current && index > 0 && index >= queue.length && allDone) {
+      completedRef.current = true;
+      onComplete(results.current, true);
+    }
+  }, [index, queue.length, allDone, onComplete]);
+
+  const card = queue[index];
 
   const initCard = useCallback((c: ReviewCard) => {
     setPhase("reveal");
@@ -70,7 +118,7 @@ export default function ReviewSession({ cards, mode, onRate, onComplete }: Props
         });
       }
     });
-  }, [cards]);
+  }, []);
 
   useEffect(() => {
     if (card) initCard(card);
@@ -81,40 +129,42 @@ export default function ReviewSession({ cards, mode, onRate, onComplete }: Props
   }
 
   function handleRate(rating: Rating) {
-    const result = { itemId: card.itemId, rating, responseTimeMs: Date.now() - startTime };
+    if (!card) return;
+    const result = {
+      itemId: card.itemId,
+      rating,
+      responseTimeMs: Date.now() - startTime,
+    };
     results.current = [...results.current, result];
     onRate(result);
-
-    if (index + 1 >= cards.length) {
-      onComplete(results.current);
-    } else {
-      setIndex(index + 1);
-    }
+    setIndex((i) => i + 1);
   }
 
   function handleExit() {
-    onComplete(results.current);
+    if (completedRef.current) return;
+    completedRef.current = true;
+    onComplete(results.current, false);
   }
 
-  if (!card) return null;
+  // Waiting for next batch to arrive
+  if (!card) {
+    return (
+      <div className="flex flex-col min-h-screen bg-stone-50 items-center justify-center gap-4">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
+        <p className="text-stone-400 text-sm">Loading more cards…</p>
+      </div>
+    );
+  }
 
-  const progress = (index / cards.length) * 100;
   const dutch = card.sentences[0] ?? "";
   const isReverse = mode === "reverse";
   const promptReady = isReverse ? translation !== null : true;
+  const reviewed = results.current.length;
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
-      {/* Progress bar */}
-      <div className="h-1 bg-stone-200">
-        <div
-          className="h-1 transition-all duration-300"
-          style={{
-            width: `${progress}%`,
-            backgroundColor: isReverse ? "#3b82f6" : "#fb923c",
-          }}
-        />
-      </div>
+      {/* Thin mode accent */}
+      <div className={`h-1 ${isReverse ? "bg-blue-500" : "bg-orange-400"}`} />
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 text-sm text-stone-500">
@@ -136,13 +186,15 @@ export default function ReviewSession({ cards, mode, onRate, onComplete }: Props
           )}
         </span>
 
-        <span className="shrink-0">{index + 1} / {cards.length}</span>
+        <div className="flex items-center gap-1.5 shrink-0 text-stone-500">
+          {loadingMore && <Loader2 className="w-3 h-3 animate-spin text-stone-300" />}
+          <span>{reviewed} reviewed</span>
+        </div>
       </div>
 
       {/* Card */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
         <div className="w-full max-w-lg">
-
           <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 mb-6 min-h-[220px] flex flex-col items-center justify-center gap-4">
 
             {/* Prompt */}
@@ -160,23 +212,15 @@ export default function ReviewSession({ cards, mode, onRate, onComplete }: Props
               </p>
             )}
 
-            {/* Reveal */}
+            {/* Answer reveal */}
             {phase === "rate" && (
               <div className="w-full border-t border-stone-100 pt-4">
                 {isReverse ? (
-                  <p className="text-center text-lg font-medium text-stone-700">
-                    {dutch}
-                  </p>
+                  <p className="text-center text-lg font-medium text-stone-700">{dutch}</p>
+                ) : translation ? (
+                  <p className="text-center text-sm text-stone-400 italic">{translation}</p>
                 ) : (
-                  translation ? (
-                    <p className="text-center text-sm text-stone-400 italic">
-                      {translation}
-                    </p>
-                  ) : (
-                    <p className="text-center text-xs text-stone-300 italic">
-                      translating…
-                    </p>
-                  )
+                  <p className="text-center text-xs text-stone-300 italic">translating…</p>
                 )}
               </div>
             )}
@@ -189,7 +233,9 @@ export default function ReviewSession({ cards, mode, onRate, onComplete }: Props
               disabled={!promptReady}
               className={`w-full py-4 rounded-2xl text-white font-medium text-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform ${
                 promptReady
-                  ? isReverse ? "bg-blue-600" : "bg-stone-800"
+                  ? isReverse
+                    ? "bg-blue-600"
+                    : "bg-stone-800"
                   : "bg-stone-300 cursor-not-allowed"
               }`}
             >
@@ -200,9 +246,24 @@ export default function ReviewSession({ cards, mode, onRate, onComplete }: Props
 
           {phase === "rate" && (
             <div className="grid grid-cols-3 gap-3">
-              <RateButton label="Forgot" sublabel="Again" color="bg-red-100 text-red-700 border-red-200 active:bg-red-200" onClick={() => handleRate("forgot")} />
-              <RateButton label="Hard" sublabel="1 day" color="bg-amber-100 text-amber-700 border-amber-200 active:bg-amber-200" onClick={() => handleRate("hard")} />
-              <RateButton label="Easy" sublabel="4+ days" color="bg-green-100 text-green-700 border-green-200 active:bg-green-200" onClick={() => handleRate("easy")} />
+              <RateButton
+                label="Forgot"
+                sublabel="Again tomorrow"
+                color="bg-red-100 text-red-700 border-red-200 active:bg-red-200"
+                onClick={() => handleRate("forgot")}
+              />
+              <RateButton
+                label="Hard"
+                sublabel="1 day"
+                color="bg-amber-100 text-amber-700 border-amber-200 active:bg-amber-200"
+                onClick={() => handleRate("hard")}
+              />
+              <RateButton
+                label="Easy"
+                sublabel="4+ days"
+                color="bg-green-100 text-green-700 border-green-200 active:bg-green-200"
+                onClick={() => handleRate("easy")}
+              />
             </div>
           )}
         </div>
@@ -211,8 +272,16 @@ export default function ReviewSession({ cards, mode, onRate, onComplete }: Props
   );
 }
 
-function RateButton({ label, sublabel, color, onClick }: {
-  label: string; sublabel: string; color: string; onClick: () => void;
+function RateButton({
+  label,
+  sublabel,
+  color,
+  onClick,
+}: {
+  label: string;
+  sublabel: string;
+  color: string;
+  onClick: () => void;
 }) {
   return (
     <button

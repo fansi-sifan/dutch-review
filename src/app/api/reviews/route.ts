@@ -61,10 +61,9 @@ export async function GET(req: NextRequest) {
 
     cards = [...contentCards.map(c => ({ ...c, state: stateMap[c.itemId] ?? null })), ...customCards];
   } else {
-    // Always reserve at least 5 slots for new cards so due reviews
-    // don't crowd out new vocabulary entirely.
-    const newCardSlots = 5;
-    const maxDue = sessionSize - newCardSlots; // 15
+    // 50/50 mix: 10 due cards + 10 new cards per batch
+    const newCardSlots = 10;
+    const maxDue = sessionSize - newCardSlots; // 10
 
     const allDueIds = await getDueItems(unlockedUnits, maxDue);
     const customDueIds = allDueIds.filter((id) => id.startsWith("custom-"));

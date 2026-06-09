@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ReviewSession from "@/components/ReviewSession";
 import type { ReviewCard, Rating } from "@/types";
 import { BookOpen, Languages, Loader2 } from "lucide-react";
@@ -12,12 +12,13 @@ type Mode = "forward" | "reverse";
 export default function ReviewPage() {
   const [state, setState] = useState<SessionState>("idle");
   const [mode, setMode] = useState<Mode>("forward");
-  const [cards, setCards] = useState<ReviewCard[]>([]);
+  const [initialCards, setInitialCards] = useState<ReviewCard[]>([]);
   const [sessionStats, setSessionStats] = useState<{
     total: number;
     forgot: number;
     hard: number;
     easy: number;
+    allDone: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -25,22 +26,32 @@ export default function ReviewPage() {
     setMode((params.get("mode") ?? "forward") as Mode);
   }, []);
 
-  function getUnlockedUnits(): number {
-    if (typeof window === "undefined") return 6;
-    return parseInt(localStorage.getItem("unlockedUpTo") ?? "6", 10);
+  function getUnitsParam(): string {
+    if (typeof window === "undefined") return "1,2,3,4,5,6";
+    const unlocked = parseInt(localStorage.getItem("unlockedUpTo") ?? "6", 10);
+    return Array.from({ length: unlocked }, (_, i) => i + 1).join(",");
   }
 
   async function startSession() {
     setState("loading");
-    const unlocked = getUnlockedUnits();
-    const units = Array.from({ length: unlocked }, (_, i) => i + 1).join(",");
-    const res = await fetch(`/api/reviews?units=${units}&mode=${mode}`);
+    setSessionStats(null);
+    const res = await fetch(`/api/reviews?units=${getUnitsParam()}&mode=${mode}`);
     const data = await res.json();
-    setCards(data.cards);
-    setState(data.cards.length > 0 ? "active" : "done");
+    setInitialCards(data.cards ?? []);
+    setState((data.cards ?? []).length > 0 ? "active" : "done");
+    if ((data.cards ?? []).length === 0) {
+      setSessionStats({ total: 0, forgot: 0, hard: 0, easy: 0, allDone: true });
+    }
   }
 
-  // Called for every card rated — saves immediately so progress is never lost
+  // Called by ReviewSession each time it needs more cards
+  const fetchMore = useCallback(async (): Promise<ReviewCard[]> => {
+    const res = await fetch(`/api/reviews?units=${getUnitsParam()}&mode=${mode}`);
+    const data = await res.json();
+    return data.cards ?? [];
+  }, [mode]);
+
+  // Fires immediately per card in forward mode
   function handleRate(result: { itemId: string; rating: Rating; responseTimeMs: number }) {
     if (mode !== "forward") return;
     fetch("/api/reviews", {
@@ -50,25 +61,27 @@ export default function ReviewPage() {
     });
   }
 
-  // Called when session ends (naturally or via exit button)
+  // Called when user exits or queue genuinely runs dry
   function handleComplete(
-    results: { itemId: string; rating: Rating; responseTimeMs: number }[]
+    results: { itemId: string; rating: Rating; responseTimeMs: number }[],
+    allDone: boolean
   ) {
-    const stats = {
+    setSessionStats({
       total: results.length,
       forgot: results.filter((r) => r.rating === "forgot").length,
       hard: results.filter((r) => r.rating === "hard").length,
       easy: results.filter((r) => r.rating === "easy").length,
-    };
-    setSessionStats(stats);
+      allDone,
+    });
     setState("done");
   }
 
   if (state === "active") {
     return (
       <ReviewSession
-        cards={cards}
+        initialCards={initialCards}
         mode={mode}
+        fetchMore={fetchMore}
         onRate={handleRate}
         onComplete={handleComplete}
       />
@@ -86,10 +99,20 @@ export default function ReviewPage() {
       {state === "done" && sessionStats && (
         <div className="w-full max-w-sm bg-white rounded-2xl border border-stone-200 p-8 shadow-sm space-y-4">
           <h2 className="text-xl font-bold text-stone-800 text-center">
-            {sessionStats.total === 0 ? "No cards rated" : isReverse ? "Practice complete!" : "Session complete!"}
+            {sessionStats.total === 0
+              ? "All caught up! 🎉"
+              : sessionStats.allDone
+              ? "All caught up! 🎉"
+              : "Session done!"}
           </h2>
-          {isReverse && sessionStats.total > 0 && (
-            <p className="text-xs text-center text-stone-400">Practice results don't affect your review schedule.</p>
+          {sessionStats.total > 0 && (
+            <p className="text-xs text-center text-stone-400">
+              {sessionStats.allDone
+                ? "Nothing left due — check back tomorrow."
+                : isReverse
+                ? "Practice results don't affect your review schedule."
+                : `${sessionStats.total} cards reviewed.`}
+            </p>
           )}
           {sessionStats.total > 0 && (
             <div className="grid grid-cols-3 gap-3 text-center">
@@ -108,12 +131,14 @@ export default function ReviewPage() {
             </div>
           )}
           <div className="flex gap-3 pt-2">
-            <button
-              onClick={startSession}
-              className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium text-sm active:scale-[0.98] transition-transform"
-            >
-              {sessionStats.total === 0 ? "Try again" : "Again"}
-            </button>
+            {!sessionStats.allDone && (
+              <button
+                onClick={startSession}
+                className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium text-sm active:scale-[0.98] transition-transform"
+              >
+                Keep going
+              </button>
+            )}
             <Link
               href="/"
               className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-700 font-medium text-sm text-center active:scale-[0.98] transition-transform"
@@ -136,7 +161,7 @@ export default function ReviewPage() {
           <p className="text-stone-500 text-sm">
             {isReverse
               ? "Translate English → Dutch. Only cards you've already learned."
-              : "Up to 20 cards — due items first, then new vocabulary."
+              : "Keep going as long as you like — exit anytime to save progress."
             }
           </p>
           <button
@@ -145,7 +170,7 @@ export default function ReviewPage() {
               isReverse ? "bg-blue-500" : "bg-orange-500"
             }`}
           >
-            Start session
+            Start
           </button>
           <Link href="/" className="block text-sm text-stone-400 hover:text-stone-600">
             ← Back to home
