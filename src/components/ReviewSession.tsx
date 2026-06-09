@@ -56,7 +56,17 @@ export default function ReviewSession({
   onRate,
   onComplete,
 }: Props) {
-  const [queue, setQueue] = useState<ReviewCard[]>(initialCards);
+  const [queue, setQueue] = useState<ReviewCard[]>(() => {
+    // Dedup on init — can't call dedup() here (closure), so inline it
+    const seen = new Set<string>();
+    const seenD = new Set<string>();
+    return initialCards.filter((c) => {
+      const dutch = (c.sentences[0] ?? "").trim();
+      if (seen.has(c.itemId) || seenD.has(dutch)) return false;
+      seen.add(c.itemId); seenD.add(dutch);
+      return true;
+    });
+  });
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("reveal");
   const [translation, setTranslation] = useState<string | null>(null);
@@ -68,10 +78,27 @@ export default function ReviewSession({
   const translationCache = useRef(new Map<string, string>());
   const fetchingRef = useRef(false);
   const completedRef = useRef(false);
+  // Track seen itemIds AND Dutch sentences to avoid showing duplicates within a session
+  const seenItemIds = useRef(new Set<string>());
+  const seenDutch = useRef(new Set<string>());
 
-  // Seed translation cache from initial cards
+  function dedup(cards: ReviewCard[]): ReviewCard[] {
+    return cards.filter((c) => {
+      const dutch = (c.sentences[0] ?? "").trim();
+      if (seenItemIds.current.has(c.itemId) || seenDutch.current.has(dutch)) return false;
+      seenItemIds.current.add(c.itemId);
+      seenDutch.current.add(dutch);
+      return true;
+    });
+  }
+
+  // Seed translation cache + seen sets from initial cards
   useEffect(() => {
     seedCache(initialCards, translationCache.current);
+    for (const c of initialCards) {
+      seenItemIds.current.add(c.itemId);
+      seenDutch.current.add((c.sentences[0] ?? "").trim());
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pre-fetch next batch when running low
@@ -84,8 +111,13 @@ export default function ReviewSession({
         if (newCards.length === 0) {
           setAllDone(true);
         } else {
-          seedCache(newCards, translationCache.current);
-          setQueue((prev) => [...prev, ...newCards]);
+          const fresh = dedup(newCards); // removes anything already shown this session
+          if (fresh.length === 0) {
+            setAllDone(true);
+          } else {
+            seedCache(fresh, translationCache.current);
+            setQueue((prev) => [...prev, ...fresh]);
+          }
         }
         setLoadingMore(false);
         fetchingRef.current = false;
