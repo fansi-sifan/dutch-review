@@ -61,8 +61,12 @@ export async function GET(req: NextRequest) {
 
     cards = [...contentCards.map(c => ({ ...c, state: stateMap[c.itemId] ?? null })), ...customCards];
   } else {
-    // Due cards (content + custom)
-    const allDueIds = await getDueItems(unlockedUnits, sessionSize);
+    // Always reserve at least 5 slots for new cards so due reviews
+    // don't crowd out new vocabulary entirely.
+    const newCardSlots = 5;
+    const maxDue = sessionSize - newCardSlots; // 15
+
+    const allDueIds = await getDueItems(unlockedUnits, maxDue);
     const customDueIds = allDueIds.filter((id) => id.startsWith("custom-"));
     const contentDueIds = allDueIds.filter((id) => !id.startsWith("custom-"));
 
@@ -71,7 +75,8 @@ export async function GET(req: NextRequest) {
     const customDueCards = customDueRaw.map(c => customToReviewCard(c, stateMap[c.id] ?? null));
 
     const dueCards = [...contentDueCards, ...customDueCards];
-    const remaining = Math.max(0, sessionSize - dueCards.length);
+    // Remaining slots: at least newCardSlots, or more if due pile was small
+    const remaining = Math.max(newCardSlots, sessionSize - dueCards.length);
 
     // New custom cards first (user just added them, prioritize learning)
     const newCustomRaw = await getNewCustomCards(seenIds);
