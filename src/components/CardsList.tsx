@@ -76,8 +76,8 @@ export default function CardsList() {
 
   const filtered = cards.filter((c) => {
     if (status === "due") return c.isDue;
-    if (status === "struggling") return c.forgetRate >= 0.3 && c.totalReviews >= 3;
-    if (status === "strong") return c.interval >= 14;
+    if (status === "struggling") return c.correctReviews < c.totalReviews; // forgotten at least once
+    if (status === "strong") return c.interval >= 7; // 3+ consecutive easys (4→10→25 days)
     if (status === "custom") return c.isCustom;
     return true;
   });
@@ -96,8 +96,8 @@ export default function CardsList() {
   const counts: Record<StatusFilter, number> = {
     all: cards.length,
     due: cards.filter((c) => c.isDue).length,
-    struggling: cards.filter((c) => c.forgetRate >= 0.3 && c.totalReviews >= 3).length,
-    strong: cards.filter((c) => c.interval >= 14).length,
+    struggling: cards.filter((c) => c.correctReviews < c.totalReviews).length,
+    strong: cards.filter((c) => c.interval >= 7).length,
     custom: cards.filter((c) => c.isCustom).length,
   };
 
