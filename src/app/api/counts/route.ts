@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllCardStates } from "@/lib/db";
+import { getAllCardStates, getLastEasyItemIds } from "@/lib/db";
 import { getItemsForUnits } from "@/lib/content";
 
 // GET /api/counts?units=1,2,3,4,5,6
@@ -12,11 +12,13 @@ export async function GET(req: NextRequest) {
     Promise.resolve(getItemsForUnits(unlockedUnits)),
   ]);
 
-  const learnedCount = allStates.filter((s) => s.repetitions >= 1).length;
+  const allIds = allStates.map((s) => s.itemId);
+  // "ready for reverse" = last review was easy
+  const reverseReadyIds = await getLastEasyItemIds(allIds);
 
   return NextResponse.json({
     studied: allStates.length,
-    learned: learnedCount,
+    learned: reverseReadyIds.length,
     total: contentItems.length,
   });
 }

@@ -3,7 +3,7 @@ import {
   recordReview,
   getDueItems,
   getAllCardStates,
-  getLearnedItemIds,
+  getLastEasyItemIds,
   getCachedTranslations,
   getCustomCardsByIds,
   getNewCustomCards,
@@ -52,7 +52,8 @@ export async function GET(req: NextRequest) {
   if (mode === "reverse") {
     const allItems = getItemsForUnits(unlockedUnits);
     const allEligibleIds = [...allItems.map((i) => i.itemId), ...Array.from(seenIds).filter(id => id.startsWith("custom-"))];
-    const learnedIds = await getLearnedItemIds(allEligibleIds);
+    // Only show cards whose most recent review was "easy" — not ones still marked hard/forgot
+    const learnedIds = await getLastEasyItemIds(allEligibleIds);
 
     const customLearnedIds = learnedIds.filter((id) => id.startsWith("custom-"));
     const contentLearnedIds = learnedIds.filter((id) => !id.startsWith("custom-"));

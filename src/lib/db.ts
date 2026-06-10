@@ -189,6 +189,26 @@ export async function getLearnedItemIds(eligibleIds: string[]): Promise<string[]
   return res.rows.map((r) => r.item_id as string).filter((id) => eligible.has(id));
 }
 
+/** Items from eligibleIds whose most recent review was rated "easy". */
+export async function getLastEasyItemIds(eligibleIds: string[]): Promise<string[]> {
+  if (!eligibleIds.length) return [];
+  const db = await getDb();
+  const placeholders = eligibleIds.map(() => "?").join(",");
+  const res = await db.execute({
+    sql: `SELECT rl.item_id
+          FROM review_log rl
+          INNER JOIN (
+            SELECT item_id, MAX(id) AS max_id
+            FROM review_log
+            WHERE item_id IN (${placeholders})
+            GROUP BY item_id
+          ) latest ON rl.item_id = latest.item_id AND rl.id = latest.max_id
+          WHERE rl.rating = 'easy'`,
+    args: eligibleIds,
+  });
+  return res.rows.map((r) => r.item_id as string);
+}
+
 export async function getWeakItems(limit = 20): Promise<{ itemId: string; forgetRate: number }[]> {
   const db = await getDb();
   const res = await db.execute({
