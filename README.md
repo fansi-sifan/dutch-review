@@ -60,11 +60,20 @@ Push to `main` → Vercel auto-deploys. Set the four env vars above in **Vercel 
 
 ## Content Pipeline
 
-Vocabulary is extracted from Rosetta Stone PDF lesson files using `scripts/parse_pdfs.py` (pdfplumber, coordinate-based two-column layout) and saved to `content/units.json`. Items without terminal punctuation (vocab-list cards that rely on images) are filtered out at runtime.
+Vocabulary is extracted from Rosetta Stone's publicly available course content PDFs using `scripts/parse_pdfs.py` (pdfplumber, coordinate-based two-column layout) and saved to `content/units.json`. Items without terminal punctuation (vocab-list cards that rely on images) are filtered out at runtime.
+
+PDFs for all supported languages are available at:
+**https://support.rosettastone.com/rosetta-stone-course-contents/**
 
 ```bash
 cd scripts && python parse_pdfs.py
 ```
+
+> **Content attribution:** Vocabulary and example sentences in `content/units.json` are sourced from Rosetta Stone's publicly available course content PDFs. This project is personal/educational and non-commercial.
+
+### Other Languages
+
+Since Rosetta Stone publishes course PDFs for many languages (Spanish, French, Japanese, Mandarin, etc.), the pipeline can generate a `units.json` for any of them. The app itself is language-agnostic — swap in a different `units.json` and update the UI labels.
 
 ## Project Structure
 
