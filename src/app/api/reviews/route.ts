@@ -12,6 +12,14 @@ import {
 import { getItemsByIds, getNewItems, getItemsForUnits } from "@/lib/content";
 import type { ReviewCard, ReviewResult } from "@/types";
 
+/** Fisher-Yates in-place shuffle */
+function shuffle<T>(arr: T[]): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
 function customToReviewCard(card: CustomCard, state: ReviewCard["state"]): ReviewCard {
   return {
     itemId: card.id,
@@ -51,15 +59,18 @@ export async function GET(req: NextRequest) {
 
     if (!learnedIds.length) return NextResponse.json({ cards: [], total: 0 });
 
-    // Return ALL learned cards shuffled — no cap.
-    // Reverse practice is a finite session; the client uses fetchMore → [] to end naturally.
-    const allShuffled = [...contentLearnedIds, ...customLearnedIds].sort(() => Math.random() - 0.5);
-
-    const contentCards = getItemsByIds(allShuffled.filter(id => !id.startsWith("custom-")));
-    const customRaw = await getCustomCardsByIds(allShuffled.filter(id => id.startsWith("custom-")));
+    // Return ALL learned cards. getItemsByIds returns in content order regardless of
+    // input order, so we shuffle the final assembled array (not just the IDs).
+    const contentCards = getItemsByIds(contentLearnedIds);
+    const customRaw = await getCustomCardsByIds(customLearnedIds);
     const customCards = customRaw.map(c => customToReviewCard(c, stateMap[c.id] ?? null));
 
-    cards = [...contentCards.map(c => ({ ...c, state: stateMap[c.itemId] ?? null })), ...customCards];
+    const combined = [
+      ...contentCards.map(c => ({ ...c, state: stateMap[c.itemId] ?? null })),
+      ...customCards,
+    ];
+    shuffle(combined);
+    cards = combined;
   } else {
     // Blended session: 12 due (up to 4 shown in reverse) + 8 new
     const newCardSlots = 8;
@@ -105,7 +116,9 @@ export async function GET(req: NextRequest) {
       ...c, reviewMode: "forward" as const,
     }));
 
-    cards = [...taggedDue, ...newCustomCards, ...newContentCards];
+    const allCards = [...taggedDue, ...newCustomCards, ...newContentCards];
+    shuffle(allCards);
+    cards = allCards;
   }
 
   // Attach cached translations (skip custom cards that already have english)
