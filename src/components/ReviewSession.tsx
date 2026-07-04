@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ReviewCard, Rating } from "@/types";
-import { Eye, X, Loader2 } from "lucide-react";
+import { Eye, X, Loader2, Volume2 } from "lucide-react";
 
 type Mode = "forward" | "reverse";
 
@@ -47,6 +47,33 @@ function seedCache(cards: ReviewCard[], cache: Map<string, string>) {
   for (const c of cards) {
     if (c.translation) cache.set(c.sentences[0] ?? "", c.translation);
   }
+}
+
+function useAudio() {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+
+  const play = useCallback((text: string) => {
+    if (!text.trim()) return;
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}`);
+    audioRef.current = audio;
+    setPlaying(true);
+    audio.play().catch(() => setPlaying(false));
+    audio.onended = () => setPlaying(false);
+    audio.onerror = () => setPlaying(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) audioRef.current.pause();
+    };
+  }, []);
+
+  return { play, playing };
 }
 
 export default function ReviewSession({
@@ -132,6 +159,8 @@ export default function ReviewSession({
       onComplete(results.current, true);
     }
   }, [index, queue.length, allDone, onComplete]);
+
+  const { play: playAudio, playing: audioPlaying } = useAudio();
 
   const card = queue[index];
   // Per-card mode: use card's reviewMode if set, fall back to session mode
@@ -246,11 +275,37 @@ export default function ReviewSession({
               </p>
             )}
 
+            {/* Audio button */}
+            <button
+              onClick={() => playAudio(dutch)}
+              className={`p-2 rounded-full transition-colors ${
+                audioPlaying
+                  ? "text-orange-500 bg-orange-50"
+                  : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
+              }`}
+              aria-label="Play pronunciation"
+            >
+              <Volume2 className="w-5 h-5" />
+            </button>
+
             {/* Answer reveal */}
             {phase === "rate" && (
               <div className="w-full border-t border-stone-100 pt-4">
                 {isReverse ? (
-                  <p className="text-center text-lg font-medium text-stone-700">{dutch}</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-center text-lg font-medium text-stone-700">{dutch}</p>
+                    <button
+                      onClick={() => playAudio(dutch)}
+                      className={`p-1.5 rounded-full transition-colors ${
+                        audioPlaying
+                          ? "text-orange-500 bg-orange-50"
+                          : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
+                      }`}
+                      aria-label="Play pronunciation"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 ) : translation ? (
                   <p className="text-center text-sm text-stone-400 italic">{translation}</p>
                 ) : (

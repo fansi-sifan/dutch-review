@@ -44,6 +44,11 @@ async function verify(value: string, sigB64url: string, secret: string): Promise
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Dev bypass for headless screenshots
+  if (process.env.NODE_ENV === "development" && request.headers.get("x-screenshot-bypass") === "1") {
+    return NextResponse.next();
+  }
+
   // Always allow: login page, auth API, Next.js internals, static assets
   if (
     pathname.startsWith("/login") ||
