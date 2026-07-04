@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dutch-review-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "dutch-review-prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "build", "&&", "npm", "start"],
+      "port": 3000
+    }
+  ]
+}
