@@ -126,10 +126,17 @@ export default function HomePage() {
 
             <Link
               href="/review?mode=audio"
-              className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-semibold text-base text-center shadow-sm active:scale-[0.98] transition-transform bg-violet-500 text-white"
+              className={`flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-semibold text-base text-center shadow-sm active:scale-[0.98] transition-transform ${
+                learnedCount > 0
+                  ? "bg-violet-500 text-white"
+                  : "bg-stone-200 text-stone-400 pointer-events-none"
+              }`}
             >
               <Headphones className="w-5 h-5" />
               Listening Practice
+              {learnedCount > 0 && (
+                <span className="text-xs font-normal opacity-80">({learnedCount} learned)</span>
+              )}
             </Link>
 
             <Link
