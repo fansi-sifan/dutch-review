@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ReviewCard, Rating } from "@/types";
-import { Eye, X, Loader2, Volume2 } from "lucide-react";
+import { Eye, X, Loader2, Volume2, Headphones } from "lucide-react";
 
-type Mode = "forward" | "reverse";
+type Mode = "forward" | "reverse" | "audio";
 
 interface Props {
   initialCards: ReviewCard[];
@@ -187,6 +187,14 @@ export default function ReviewSession({
     if (card) initCard(card);
   }, [card, initCard]);
 
+  // Auto-play audio when entering an audio-mode card
+  useEffect(() => {
+    if (card && cardMode === "audio") {
+      const t = setTimeout(() => playAudio(card.sentences[0] ?? ""), 300);
+      return () => clearTimeout(t);
+    }
+  }, [card, cardMode, playAudio]);
+
   function handleReveal() {
     setPhase("rate");
   }
@@ -221,13 +229,14 @@ export default function ReviewSession({
 
   const dutch = card.sentences[0] ?? "";
   const isReverse = cardMode === "reverse";
+  const isAudio = cardMode === "audio";
   const promptReady = isReverse ? translation !== null : true;
   const reviewed = results.current.length;
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
       {/* Thin accent — changes per card */}
-      <div className={`h-1 transition-colors duration-300 ${isReverse ? "bg-blue-500" : "bg-orange-400"}`} />
+      <div className={`h-1 transition-colors duration-300 ${isAudio ? "bg-violet-500" : isReverse ? "bg-blue-500" : "bg-orange-400"}`} />
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 text-sm text-stone-500">
@@ -244,6 +253,9 @@ export default function ReviewSession({
           <span className="ml-2 text-xs font-normal text-stone-400">
             {card.lessonId} · {card.lessonType}
           </span>
+          {isAudio && (
+            <span className="ml-2 text-xs font-semibold text-violet-400">Audio</span>
+          )}
           {isReverse && (
             <span className="ml-2 text-xs font-semibold text-blue-400">EN→NL</span>
           )}
@@ -261,7 +273,12 @@ export default function ReviewSession({
           <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 mb-6 min-h-[220px] flex flex-col items-center justify-center gap-4">
 
             {/* Prompt */}
-            {isReverse ? (
+            {isAudio ? (
+              <>
+                <Headphones className="w-10 h-10 text-violet-300" />
+                <p className="text-sm text-stone-400">Listen and recall the meaning</p>
+              </>
+            ) : isReverse ? (
               translation ? (
                 <p className="text-2xl font-medium text-stone-800 leading-relaxed text-center italic">
                   {translation}
@@ -278,20 +295,35 @@ export default function ReviewSession({
             {/* Audio button */}
             <button
               onClick={() => playAudio(dutch)}
-              className={`p-2 rounded-full transition-colors ${
+              className={`p-3 rounded-full transition-colors ${
+                isAudio ? "p-4" : ""
+              } ${
                 audioPlaying
-                  ? "text-orange-500 bg-orange-50"
+                  ? "text-violet-500 bg-violet-50"
+                  : isAudio
+                  ? "text-violet-400 bg-violet-50 hover:bg-violet-100"
                   : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
               }`}
               aria-label="Play pronunciation"
             >
-              <Volume2 className="w-5 h-5" />
+              <Volume2 className={isAudio ? "w-8 h-8" : "w-5 h-5"} />
             </button>
 
             {/* Answer reveal */}
             {phase === "rate" && (
-              <div className="w-full border-t border-stone-100 pt-4">
-                {isReverse ? (
+              <div className="w-full border-t border-stone-100 pt-4 space-y-2">
+                {isAudio ? (
+                  <>
+                    <div className="flex items-center justify-center gap-2">
+                      <p className="text-center text-xl font-medium text-stone-800">{dutch}</p>
+                    </div>
+                    {translation ? (
+                      <p className="text-center text-sm text-stone-400 italic">{translation}</p>
+                    ) : (
+                      <p className="text-center text-xs text-stone-300 italic">translating…</p>
+                    )}
+                  </>
+                ) : isReverse ? (
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-center text-lg font-medium text-stone-700">{dutch}</p>
                     <button
@@ -322,7 +354,9 @@ export default function ReviewSession({
               disabled={!promptReady}
               className={`w-full py-4 rounded-2xl text-white font-medium text-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform ${
                 promptReady
-                  ? isReverse
+                  ? isAudio
+                    ? "bg-violet-600"
+                    : isReverse
                     ? "bg-blue-600"
                     : "bg-stone-800"
                   : "bg-stone-300 cursor-not-allowed"

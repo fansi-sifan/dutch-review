@@ -49,7 +49,39 @@ export async function GET(req: NextRequest) {
 
   let cards: ReviewCard[];
 
-  if (mode === "reverse") {
+  if (mode === "audio") {
+    // Audio mode: same blend as forward but all cards tagged "audio" (no reverse flips)
+    const newCardSlots = 8;
+    const maxDue = sessionSize - newCardSlots;
+
+    const allDueIds = await getDueItems(unlockedUnits, maxDue);
+    const customDueIds = allDueIds.filter((id) => id.startsWith("custom-"));
+    const contentDueIds = allDueIds.filter((id) => !id.startsWith("custom-"));
+
+    const contentDueCards = getItemsByIds(contentDueIds).map(c => ({ ...c, state: stateMap[c.itemId] ?? null }));
+    const customDueRaw = await getCustomCardsByIds(customDueIds);
+    const customDueCards = customDueRaw.map(c => customToReviewCard(c, stateMap[c.id] ?? null));
+
+    const dueCards = [...contentDueCards, ...customDueCards];
+    const taggedDue = dueCards.map((c) => ({
+      ...c,
+      reviewMode: "audio" as const,
+    }));
+
+    const remaining = Math.max(newCardSlots, sessionSize - taggedDue.length);
+    const newCustomRaw = await getNewCustomCards(seenIds);
+    const newCustomCards = newCustomRaw.slice(0, remaining).map(c => ({
+      ...customToReviewCard(c, null), reviewMode: "audio" as const,
+    }));
+    const remainingAfterCustom = Math.max(0, remaining - newCustomCards.length);
+    const newContentCards = getNewItems(unlockedUnits, seenIds, remainingAfterCustom).map(c => ({
+      ...c, reviewMode: "audio" as const,
+    }));
+
+    const allCards = [...taggedDue, ...newCustomCards, ...newContentCards];
+    shuffle(allCards);
+    cards = allCards;
+  } else if (mode === "reverse") {
     const allItems = getItemsForUnits(unlockedUnits);
     const allEligibleIds = [...allItems.map((i) => i.itemId), ...Array.from(seenIds).filter(id => id.startsWith("custom-"))];
     // Only show cards whose most recent review was "easy" — not ones still marked hard/forgot
