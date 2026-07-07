@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import ReviewSession from "@/components/ReviewSession";
 import type { ReviewCard, Rating } from "@/types";
-import { BookOpen, Languages, Loader2 } from "lucide-react";
+import { BookOpen, Languages, Loader2, Headphones } from "lucide-react";
 import Link from "next/link";
 
 type SessionState = "idle" | "loading" | "active" | "done";
-type Mode = "forward" | "reverse";
+type Mode = "forward" | "reverse" | "audio";
 
 export default function ReviewPage() {
   const [state, setState] = useState<SessionState>("idle");
@@ -47,7 +47,7 @@ export default function ReviewPage() {
   // Called by ReviewSession each time it needs more cards.
   // Reverse practice is a finite set — return [] so it ends naturally.
   const fetchMore = useCallback(async (): Promise<ReviewCard[]> => {
-    if (mode === "reverse") return [];
+    if (mode === "reverse" || mode === "audio") return [];
     const res = await fetch(`/api/reviews?units=${getUnitsParam()}&mode=${mode}`);
     const data = await res.json();
     return data.cards ?? [];
@@ -90,6 +90,27 @@ export default function ReviewPage() {
   }
 
   const isReverse = mode === "reverse";
+  const isAudio = mode === "audio";
+
+  const modeIcon = isAudio
+    ? <Headphones className="w-12 h-12 text-violet-400 mx-auto" />
+    : isReverse
+    ? <Languages className="w-12 h-12 text-blue-400 mx-auto" />
+    : <BookOpen className="w-12 h-12 text-orange-400 mx-auto" />;
+
+  const modeTitle = isAudio
+    ? "Listening Practice"
+    : isReverse
+    ? "Reverse Practice"
+    : "Ready to review?";
+
+  const modeDesc = isAudio
+    ? "Listen to the Dutch audio and try to recall the English meaning."
+    : isReverse
+    ? "All learned cards, English → Dutch. Ratings count toward your schedule."
+    : "New words + due reviews. Some cards flip to EN→NL once you've seen them enough.";
+
+  const modeColor = isAudio ? "bg-violet-500" : isReverse ? "bg-blue-500" : "bg-orange-500";
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6 gap-6">
@@ -150,24 +171,12 @@ export default function ReviewPage() {
 
       {state === "idle" && (
         <div className="w-full max-w-sm space-y-4 text-center">
-          {isReverse
-            ? <Languages className="w-12 h-12 text-blue-400 mx-auto" />
-            : <BookOpen className="w-12 h-12 text-orange-400 mx-auto" />
-          }
-          <h1 className="text-2xl font-bold text-stone-800">
-            {isReverse ? "Reverse Practice" : "Ready to review?"}
-          </h1>
-          <p className="text-stone-500 text-sm">
-            {isReverse
-              ? "All learned cards, English → Dutch. Ratings count toward your schedule."
-              : "New words + due reviews. Some cards flip to EN→NL once you've seen them enough."
-            }
-          </p>
+          {modeIcon}
+          <h1 className="text-2xl font-bold text-stone-800">{modeTitle}</h1>
+          <p className="text-stone-500 text-sm">{modeDesc}</p>
           <button
             onClick={startSession}
-            className={`w-full py-4 rounded-2xl text-white font-semibold text-lg active:scale-[0.98] transition-transform shadow-sm ${
-              isReverse ? "bg-blue-500" : "bg-orange-500"
-            }`}
+            className={`w-full py-4 rounded-2xl text-white font-semibold text-lg active:scale-[0.98] transition-transform shadow-sm ${modeColor}`}
           >
             Start
           </button>

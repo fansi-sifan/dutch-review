@@ -6,7 +6,7 @@ import UnitGrid from "@/components/UnitGrid";
 import StatsPanel from "@/components/StatsPanel";
 import CardsList from "@/components/CardsList";
 import { getAllUnits, getItemsForUnits } from "@/lib/content";
-import { BookOpen, BarChart2, Map, Languages, Plus, X, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, BarChart2, Map, Languages, Plus, X, ChevronDown, ChevronUp, Headphones } from "lucide-react";
 import type { Unit } from "@/types";
 
 type Tab = "review" | "units" | "stats";
@@ -122,6 +122,21 @@ export default function HomePage() {
               className="block w-full py-5 rounded-2xl bg-orange-500 text-white font-bold text-xl text-center shadow-sm active:scale-[0.98] transition-transform"
             >
               Start Review
+            </Link>
+
+            <Link
+              href="/review?mode=audio"
+              className={`flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-semibold text-base text-center shadow-sm active:scale-[0.98] transition-transform ${
+                learnedCount > 0
+                  ? "bg-violet-500 text-white"
+                  : "bg-stone-200 text-stone-400 pointer-events-none"
+              }`}
+            >
+              <Headphones className="w-5 h-5" />
+              Listening Practice
+              {learnedCount > 0 && (
+                <span className="text-xs font-normal opacity-80">({learnedCount} learned)</span>
+              )}
             </Link>
 
             <Link

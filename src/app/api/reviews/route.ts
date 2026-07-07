@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
 
   let cards: ReviewCard[];
 
-  if (mode === "reverse") {
+  if (mode === "audio" || mode === "reverse") {
     const allItems = getItemsForUnits(unlockedUnits);
     const allEligibleIds = [...allItems.map((i) => i.itemId), ...Array.from(seenIds).filter(id => id.startsWith("custom-"))];
     // Only show cards whose most recent review was "easy" — not ones still marked hard/forgot
@@ -66,9 +66,10 @@ export async function GET(req: NextRequest) {
     const customRaw = await getCustomCardsByIds(customLearnedIds);
     const customCards = customRaw.map(c => customToReviewCard(c, stateMap[c.id] ?? null));
 
+    const reviewMode = mode === "audio" ? "audio" as const : "reverse" as const;
     const combined = [
-      ...contentCards.map(c => ({ ...c, state: stateMap[c.itemId] ?? null })),
-      ...customCards,
+      ...contentCards.map(c => ({ ...c, state: stateMap[c.itemId] ?? null, reviewMode })),
+      ...customCards.map(c => ({ ...c, reviewMode })),
     ];
     shuffle(combined);
     cards = combined;
