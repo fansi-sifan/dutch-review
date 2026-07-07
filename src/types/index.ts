@@ -43,6 +43,7 @@ export interface ReviewResult {
   itemId: string;
   rating: Rating;
   responseTimeMs: number;
+  mode?: string;
 }
 
 // A card ready for review, with its content
