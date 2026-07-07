@@ -54,7 +54,7 @@ export default function ReviewPage() {
   }, [mode]);
 
   // Fires immediately per card — saves for all modes now that reverse is integrated
-  function handleRate(result: { itemId: string; rating: Rating; responseTimeMs: number }) {
+  function handleRate(result: { itemId: string; rating: Rating; responseTimeMs: number; mode: string }) {
     fetch("/api/reviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -64,7 +64,7 @@ export default function ReviewPage() {
 
   // Called when user exits or queue genuinely runs dry
   function handleComplete(
-    results: { itemId: string; rating: Rating; responseTimeMs: number }[],
+    results: { itemId: string; rating: Rating; responseTimeMs: number; mode: string }[],
     allDone: boolean
   ) {
     setSessionStats({

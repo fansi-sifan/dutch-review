@@ -10,9 +10,9 @@ interface Props {
   initialCards: ReviewCard[];
   mode: Mode;
   fetchMore: () => Promise<ReviewCard[]>;
-  onRate: (result: { itemId: string; rating: Rating; responseTimeMs: number }) => void;
+  onRate: (result: { itemId: string; rating: Rating; responseTimeMs: number; mode: string }) => void;
   onComplete: (
-    results: { itemId: string; rating: Rating; responseTimeMs: number }[],
+    results: { itemId: string; rating: Rating; responseTimeMs: number; mode: string }[],
     allDone: boolean
   ) => void;
 }
@@ -101,7 +101,7 @@ export default function ReviewSession({
   const [loadingMore, setLoadingMore] = useState(false);
   const [allDone, setAllDone] = useState(false);
 
-  const results = useRef<{ itemId: string; rating: Rating; responseTimeMs: number }[]>([]);
+  const results = useRef<{ itemId: string; rating: Rating; responseTimeMs: number; mode: string }[]>([]);
   const translationCache = useRef(new Map<string, string>());
   const fetchingRef = useRef(false);
   const completedRef = useRef(false);
@@ -205,6 +205,7 @@ export default function ReviewSession({
       itemId: card.itemId,
       rating,
       responseTimeMs: Date.now() - startTime,
+      mode: cardMode,
     };
     results.current = [...results.current, result];
     onRate(result);

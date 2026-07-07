@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllCardStates, getLastEasyItemIds } from "@/lib/db";
+import { getAllCardStates, getLastEasyItemIds, getEasyInModeItemIds } from "@/lib/db";
 import { getItemsForUnits } from "@/lib/content";
 
 // GET /api/counts?units=1,2,3,4,5,6
@@ -13,12 +13,17 @@ export async function GET(req: NextRequest) {
   ]);
 
   const allIds = allStates.map((s) => s.itemId);
-  // "ready for reverse" = last review was easy
-  const reverseReadyIds = await getLastEasyItemIds(allIds);
+  // Audio-ready = last review was "easy"
+  // Reverse-ready = ever rated "easy" in audio mode
+  const [audioReadyIds, reverseReadyIds] = await Promise.all([
+    getLastEasyItemIds(allIds),
+    getEasyInModeItemIds(allIds, "audio"),
+  ]);
 
   return NextResponse.json({
     studied: allStates.length,
-    learned: reverseReadyIds.length,
+    audioReady: audioReadyIds.length,
+    reverseReady: reverseReadyIds.length,
     total: contentItems.length,
   });
 }

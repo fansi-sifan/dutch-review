@@ -16,7 +16,8 @@ interface CustomCard { id: string; dutch: string; english: string | null }
 export default function HomePage() {
   const [tab, setTab] = useState<Tab>("review");
   const [unlockedUpTo, setUnlockedUpTo] = useState(6);
-  const [learnedCount, setLearnedCount] = useState(0);
+  const [audioReadyCount, setAudioReadyCount] = useState(0);
+  const [reverseReadyCount, setReverseReadyCount] = useState(0);
   const [studiedCount, setStudiedCount] = useState<number | null>(null);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [stats, setStats] = useState<{
@@ -49,7 +50,8 @@ export default function HomePage() {
     fetch(`/api/counts?units=${unitList}`)
       .then((r) => r.json())
       .then((d) => {
-        setLearnedCount(d.learned ?? 0);
+        setAudioReadyCount(d.audioReady ?? 0);
+        setReverseReadyCount(d.reverseReady ?? 0);
         setStudiedCount(d.studied ?? 0);
         setTotalCount(d.total ?? 0);
       });
@@ -127,30 +129,30 @@ export default function HomePage() {
             <Link
               href="/review?mode=audio"
               className={`flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-semibold text-base text-center shadow-sm active:scale-[0.98] transition-transform ${
-                learnedCount > 0
+                audioReadyCount > 0
                   ? "bg-violet-500 text-white"
                   : "bg-stone-200 text-stone-400 pointer-events-none"
               }`}
             >
               <Headphones className="w-5 h-5" />
               Listening Practice
-              {learnedCount > 0 && (
-                <span className="text-xs font-normal opacity-80">({learnedCount} learned)</span>
+              {audioReadyCount > 0 && (
+                <span className="text-xs font-normal opacity-80">({audioReadyCount})</span>
               )}
             </Link>
 
             <Link
               href="/review?mode=reverse"
               className={`flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-semibold text-base text-center shadow-sm active:scale-[0.98] transition-transform ${
-                learnedCount > 0
+                reverseReadyCount > 0
                   ? "bg-blue-500 text-white"
                   : "bg-stone-200 text-stone-400 pointer-events-none"
               }`}
             >
               <Languages className="w-5 h-5" />
               Reverse Practice
-              {learnedCount > 0 && (
-                <span className="text-xs font-normal opacity-80">({learnedCount} learned)</span>
+              {reverseReadyCount > 0 && (
+                <span className="text-xs font-normal opacity-80">({reverseReadyCount})</span>
               )}
             </Link>
 

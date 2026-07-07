@@ -48,11 +48,18 @@ async function ensureSchema(client: Client): Promise<void> {
         item_id         TEXT    NOT NULL,
         rating          TEXT    NOT NULL,
         response_ms     INTEGER NOT NULL,
-        reviewed_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+        reviewed_at     TEXT    NOT NULL DEFAULT (datetime('now')),
+        mode            TEXT    NOT NULL DEFAULT 'forward'
       )`,
     ],
     "write"
   );
+  // Migration: add mode column to review_log if missing
+  try {
+    await client.execute("ALTER TABLE review_log ADD COLUMN mode TEXT NOT NULL DEFAULT 'forward'");
+  } catch {
+    // column already exists
+  }
 }
 
 async function getDb(): Promise<Client> {
@@ -110,7 +117,8 @@ export async function getCardState(itemId: string): Promise<CardState | null> {
 export async function recordReview(
   itemId: string,
   rating: Rating,
-  responseMs: number
+  responseMs: number,
+  mode: string = "forward"
 ): Promise<CardState> {
   const db = await getDb();
   const existing = await getCardState(itemId);
@@ -138,8 +146,8 @@ export async function recordReview(
       args: [itemId, next.ef, next.interval, next.reps, nextReview, totalReviews, correctReviews],
     },
     {
-      sql: "INSERT INTO review_log (item_id, rating, response_ms) VALUES (?, ?, ?)",
-      args: [itemId, rating, responseMs],
+      sql: "INSERT INTO review_log (item_id, rating, response_ms, mode) VALUES (?, ?, ?, ?)",
+      args: [itemId, rating, responseMs, mode],
     },
   ], "write");
 
@@ -205,6 +213,21 @@ export async function getLastEasyItemIds(eligibleIds: string[]): Promise<string[
           ) latest ON rl.item_id = latest.item_id AND rl.id = latest.max_id
           WHERE rl.rating = 'easy'`,
     args: eligibleIds,
+  });
+  return res.rows.map((r) => r.item_id as string);
+}
+
+/** Items from eligibleIds that have been rated "easy" at least once in the given mode. */
+export async function getEasyInModeItemIds(eligibleIds: string[], mode: string): Promise<string[]> {
+  if (!eligibleIds.length) return [];
+  const db = await getDb();
+  const placeholders = eligibleIds.map(() => "?").join(",");
+  const res = await db.execute({
+    sql: `SELECT DISTINCT item_id FROM review_log
+          WHERE item_id IN (${placeholders})
+            AND rating = 'easy'
+            AND mode = ?`,
+    args: [...eligibleIds, mode],
   });
   return res.rows.map((r) => r.item_id as string);
 }

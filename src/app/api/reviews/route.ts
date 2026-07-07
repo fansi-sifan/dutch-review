@@ -4,6 +4,7 @@ import {
   getDueItems,
   getAllCardStates,
   getLastEasyItemIds,
+  getEasyInModeItemIds,
   getCachedTranslations,
   getCustomCardsByIds,
   getNewCustomCards,
@@ -52,18 +53,20 @@ export async function GET(req: NextRequest) {
   if (mode === "audio" || mode === "reverse") {
     const allItems = getItemsForUnits(unlockedUnits);
     const allEligibleIds = [...allItems.map((i) => i.itemId), ...Array.from(seenIds).filter(id => id.startsWith("custom-"))];
-    // Only show cards whose most recent review was "easy" — not ones still marked hard/forgot
-    const learnedIds = await getLastEasyItemIds(allEligibleIds);
 
-    const customLearnedIds = learnedIds.filter((id) => id.startsWith("custom-"));
-    const contentLearnedIds = learnedIds.filter((id) => !id.startsWith("custom-"));
+    // Audio drill: cards whose last review was "easy" (same as before)
+    // Reverse drill: cards that have been rated easy in audio mode at least once
+    const eligibleIds = mode === "audio"
+      ? await getLastEasyItemIds(allEligibleIds)
+      : await getEasyInModeItemIds(allEligibleIds, "audio");
 
-    if (!learnedIds.length) return NextResponse.json({ cards: [], total: 0 });
+    if (!eligibleIds.length) return NextResponse.json({ cards: [], total: 0 });
 
-    // Return ALL learned cards. getItemsByIds returns in content order regardless of
-    // input order, so we shuffle the final assembled array (not just the IDs).
-    const contentCards = getItemsByIds(contentLearnedIds);
-    const customRaw = await getCustomCardsByIds(customLearnedIds);
+    const customIds = eligibleIds.filter((id) => id.startsWith("custom-"));
+    const contentIds = eligibleIds.filter((id) => !id.startsWith("custom-"));
+
+    const contentCards = getItemsByIds(contentIds);
+    const customRaw = await getCustomCardsByIds(customIds);
     const customCards = customRaw.map(c => customToReviewCard(c, stateMap[c.id] ?? null));
 
     const reviewMode = mode === "audio" ? "audio" as const : "reverse" as const;
@@ -74,10 +77,11 @@ export async function GET(req: NextRequest) {
     shuffle(combined);
     cards = combined;
   } else {
-    // Blended session: 12 due (up to 4 shown in reverse) + 8 new
+    // Blended session: 12 due (mixed forward/audio/reverse) + 8 new
     const newCardSlots = 8;
     const maxDue = sessionSize - newCardSlots;   // 12
-    const reverseSlots = 4; // how many due cards to flip to reverse
+    const audioSlots = 4;
+    const reverseSlots = 4;
 
     const allDueIds = await getDueItems(unlockedUnits, maxDue);
     const customDueIds = allDueIds.filter((id) => id.startsWith("custom-"));
@@ -88,23 +92,35 @@ export async function GET(req: NextRequest) {
     const customDueCards = customDueRaw.map(c => customToReviewCard(c, stateMap[c.id] ?? null));
 
     const dueCards = [...contentDueCards, ...customDueCards];
+    const dueIds = dueCards.map((c) => c.itemId);
 
-    // Cards seen at least twice (total, not streak) are fair game for reverse.
-    // Using totalReviews instead of repetitions because repetitions resets on
-    // "forgot", meaning frequently-forgotten cards would never qualify otherwise.
-    const eligibleForReverse = dueCards.filter(
-      (c) => (stateMap[c.itemId]?.totalReviews ?? 0) >= 2
-    );
+    // Audio-eligible: last review was "easy" (learned in forward)
+    // Reverse-eligible: ever rated "easy" in audio mode
+    const [audioEligibleIds, reverseEligibleIds] = await Promise.all([
+      getLastEasyItemIds(dueIds),
+      getEasyInModeItemIds(dueIds, "audio"),
+    ]);
+
+    // Pick reverse cards first (highest tier), then audio, rest stay forward
     const reverseSet = new Set(
-      eligibleForReverse
+      reverseEligibleIds
         .sort(() => Math.random() - 0.5)
         .slice(0, reverseSlots)
-        .map((c) => c.itemId)
+    );
+    const audioEligibleNotReverse = audioEligibleIds.filter((id) => !reverseSet.has(id));
+    const audioSet = new Set(
+      audioEligibleNotReverse
+        .sort(() => Math.random() - 0.5)
+        .slice(0, audioSlots)
     );
 
     const taggedDue = dueCards.map((c) => ({
       ...c,
-      reviewMode: reverseSet.has(c.itemId) ? ("reverse" as const) : ("forward" as const),
+      reviewMode: reverseSet.has(c.itemId)
+        ? "reverse" as const
+        : audioSet.has(c.itemId)
+        ? "audio" as const
+        : "forward" as const,
     }));
 
     // New cards: always forward
@@ -134,11 +150,11 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ cards: cardsWithTranslations, total: cardsWithTranslations.length });
 }
 
-// POST /api/reviews  body: ReviewResult[]  (forward sessions only)
+// POST /api/reviews  body: ReviewResult[]
 export async function POST(req: NextRequest) {
   const results: ReviewResult[] = await req.json();
   const updated = await Promise.all(
-    results.map((r) => recordReview(r.itemId, r.rating, r.responseTimeMs))
+    results.map((r) => recordReview(r.itemId, r.rating, r.responseTimeMs, r.mode ?? "forward"))
   );
   return NextResponse.json({ updated });
 }
