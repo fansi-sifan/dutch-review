@@ -199,13 +199,13 @@ export default function ReviewSession({
     if (card) initCard(card);
   }, [card, initCard]);
 
-  // Auto-play audio on every card when audio is enabled
+  // Auto-play audio on forward and audio-mode cards (not reverse — hearing Dutch first lets you cheat)
   useEffect(() => {
-    if (card && audioEnabled) {
+    if (card && audioEnabled && cardMode !== "reverse") {
       const t = setTimeout(() => playAudio(card.sentences[0] ?? ""), 300);
       return () => clearTimeout(t);
     }
-  }, [card, audioEnabled, playAudio]);
+  }, [card, audioEnabled, cardMode, playAudio]);
 
   function handleReveal() {
     setPhase("rate");
