@@ -264,14 +264,6 @@ export async function getReviewStreak(): Promise<number> {
   return streak;
 }
 
-export async function getReviewsToday(): Promise<number> {
-  const db = await getDb();
-  const res = await db.execute(
-    `SELECT COUNT(*) as count FROM review_log WHERE date(reviewed_at) = date('now')`
-  );
-  return (res.rows[0]?.count as number) ?? 0;
-}
-
 export async function getReviewCalendar(days = 60): Promise<Record<string, number>> {
   const db = await getDb();
   const res = await db.execute({

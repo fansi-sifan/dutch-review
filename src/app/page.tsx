@@ -5,57 +5,28 @@ import Link from "next/link";
 import UnitGrid from "@/components/UnitGrid";
 import StatsPanel from "@/components/StatsPanel";
 import CardsList from "@/components/CardsList";
-import { getAllUnits } from "@/lib/content";
-import { BookOpen, BarChart2, Map, Languages, Plus, X, ChevronDown, ChevronUp, Flame, Headphones } from "lucide-react";
+import { getAllUnits, getItemsForUnits } from "@/lib/content";
+import { BookOpen, BarChart2, Map, Languages, Plus, X, ChevronDown, ChevronUp, Headphones } from "lucide-react";
 import type { Unit } from "@/types";
 
 type Tab = "review" | "units" | "stats";
 
 interface CustomCard { id: string; dutch: string; english: string | null }
 
-const DAILY_GOAL = 15;
-
-function GoalRing({ todayCount, goal }: { todayCount: number; goal: number }) {
-  const r = 24;
-  const circ = 2 * Math.PI * r;
-  const progress = Math.min(todayCount / goal, 1);
-  const dash = progress * circ;
-  const done = todayCount >= goal;
-
-  return (
-    <svg width="56" height="56" viewBox="0 0 56 56" className="shrink-0" aria-hidden="true">
-      <circle cx="28" cy="28" r={r} fill="none" stroke="#e7e5e4" strokeWidth="4" />
-      <circle
-        cx="28" cy="28" r={r}
-        fill="none"
-        stroke={done ? "#22c55e" : "#f97316"}
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeDasharray={`${dash} ${circ}`}
-        transform="rotate(-90 28 28)"
-        style={{ transition: "stroke-dasharray 0.5s ease" }}
-      />
-      <text x="28" y="33" textAnchor="middle" fontSize="11" fontWeight="500" fill="#292524">
-        {Math.min(todayCount, goal)}/{goal}
-      </text>
-    </svg>
-  );
-}
-
 export default function HomePage() {
   const [tab, setTab] = useState<Tab>("review");
   const [unlockedUpTo, setUnlockedUpTo] = useState(6);
   const [audioReadyCount, setAudioReadyCount] = useState(0);
   const [reverseReadyCount, setReverseReadyCount] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [todayCount, setTodayCount] = useState(0);
-  const [dueCount, setDueCount] = useState<number | null>(null);
+  const [studiedCount, setStudiedCount] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [stats, setStats] = useState<{
     streak: number; dueCount: number; totalSeen: number;
     calendar: Record<string, number>;
     weakItems: { itemId: string; forgetRate: number; sentences: string[]; unitName: string; lessonId: string }[];
   } | null>(null);
 
+  // Custom cards state
   const [customCards, setCustomCards] = useState<CustomCard[]>([]);
   const [showMyCards, setShowMyCards] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -81,9 +52,8 @@ export default function HomePage() {
       .then((d) => {
         setAudioReadyCount(d.audioReady ?? 0);
         setReverseReadyCount(d.reverseReady ?? 0);
-        setStreak(d.streak ?? 0);
-        setTodayCount(d.todayCount ?? 0);
-        setDueCount(d.dueCount ?? 0);
+        setStudiedCount(d.studied ?? 0);
+        setTotalCount(d.total ?? 0);
       });
   }, []);
 
@@ -120,68 +90,42 @@ export default function HomePage() {
     setCustomCards(customCards.filter((c) => c.id !== id));
   }
 
-  const todayGoalMet = todayCount >= DAILY_GOAL;
-  const remaining = Math.max(0, DAILY_GOAL - todayCount);
-  const hour = new Date().getHours();
-  const streakAtRisk = streak > 0 && todayCount === 0 && hour >= 18;
-
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col max-w-2xl mx-auto">
       <header className="px-5 pt-8 pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-stone-800">🇳🇱 Dutch Review</h1>
-            <p className="text-stone-500 text-sm mt-0.5">Rosetta Stone companion</p>
-          </div>
-          {streak > 0 && (
-            <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-100 rounded-full px-3 py-1.5">
-              <Flame className="w-4 h-4 text-orange-500" />
-              <span className="text-sm font-semibold text-orange-700">{streak}</span>
-            </div>
-          )}
-        </div>
+        <h1 className="text-2xl font-bold text-stone-800">🇳🇱 Dutch Review</h1>
+        <p className="text-stone-500 text-sm mt-1">Rosetta Stone companion</p>
       </header>
 
       <main className="flex-1 overflow-y-auto pb-24">
         {tab === "review" && (
-          <div className="px-5 space-y-3 pt-2">
+          <div className="px-5 space-y-4 pt-2">
 
-            {/* Daily goal card */}
-            <div className="bg-white rounded-2xl border border-stone-200 p-4 flex items-center gap-4">
-              <GoalRing todayCount={todayCount} goal={DAILY_GOAL} />
-              <div className="flex-1 min-w-0">
-                {todayGoalMet ? (
-                  <>
-                    <p className="text-sm font-semibold text-green-700">Goal met today!</p>
-                    <p className="text-xs text-stone-500 mt-0.5">Anything more is a bonus</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm font-semibold text-stone-800">
-                      {remaining} more card{remaining !== 1 ? "s" : ""} today
-                    </p>
-                    <p className="text-xs text-stone-500 mt-0.5">
-                      ~{Math.max(1, Math.ceil(remaining / 8))} min · goal is {DAILY_GOAL} cards
-                    </p>
-                  </>
-                )}
-                {streakAtRisk && (
-                  <p className="text-xs text-orange-600 font-medium mt-1">
-                    Complete today to keep your {streak}-day streak
+            {/* Progress status bar */}
+            {studiedCount !== null && totalCount !== null && totalCount > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-baseline">
+                  <p className="text-xs font-medium text-stone-500">
+                    <span className="text-stone-800 font-semibold">{studiedCount}</span> / {totalCount} cards studied
                   </p>
-                )}
+                  <p className="text-xs text-stone-400">{Math.round(studiedCount / totalCount * 100)}%</p>
+                </div>
+                <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-orange-400 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, studiedCount / totalCount * 100)}%` }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Start Review */}
             <Link
               href="/review"
               className="block w-full py-5 rounded-2xl bg-orange-500 text-white font-bold text-xl text-center shadow-sm active:scale-[0.98] transition-transform"
             >
-              {dueCount !== null && dueCount > 0 ? `Review · ${dueCount} due` : "Start Review"}
+              Start Review
             </Link>
 
-            {/* Reverse Practice */}
             <Link
               href="/review?mode=audio"
               className={`flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-semibold text-base text-center shadow-sm active:scale-[0.98] transition-transform ${
@@ -231,6 +175,7 @@ export default function HomePage() {
 
               {showMyCards && (
                 <div className="border-t border-stone-100 px-5 pb-4 space-y-3">
+                  {/* Add button / form */}
                   {!showForm ? (
                     <button
                       onClick={() => setShowForm(true)}
@@ -272,6 +217,7 @@ export default function HomePage() {
                     </form>
                   )}
 
+                  {/* Card list */}
                   {customCards.length === 0 ? (
                     <p className="text-xs text-stone-400 pb-1">No cards yet — add your first one above.</p>
                   ) : (
@@ -299,6 +245,23 @@ export default function HomePage() {
               )}
             </div>
 
+            <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-1">
+              <p className="text-xs text-stone-500 uppercase tracking-wide font-medium">Current progress</p>
+              <p className="text-stone-800 font-semibold">Units 1–{unlockedUpTo} unlocked</p>
+              <p className="text-stone-500 text-sm">
+                {getItemsForUnits(Array.from({ length: unlockedUpTo }, (_, i) => i + 1)).length} items available
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-2">
+              <p className="text-xs text-stone-500 uppercase tracking-wide font-medium">How it works</p>
+              <ul className="text-sm text-stone-600 space-y-1.5">
+                <li>🃏 Flashcard: read the Dutch, recall the meaning</li>
+                <li>👁 Reveal the translation, then rate yourself</li>
+                <li>🟢 Easy → see it in weeks · 🔴 Forgot → tomorrow</li>
+                <li>📊 Weak spots tracked automatically</li>
+              </ul>
+            </div>
           </div>
         )}
 
