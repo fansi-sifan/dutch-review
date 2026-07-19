@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ReviewCard, Rating } from "@/types";
-import { Eye, X, Loader2, Volume2, Headphones } from "lucide-react";
+import { Eye, X, Loader2, Volume2, VolumeX, Headphones } from "lucide-react";
 
 type Mode = "forward" | "reverse" | "audio";
 
@@ -100,6 +100,18 @@ export default function ReviewSession({
   const [startTime, setStartTime] = useState(Date.now());
   const [loadingMore, setLoadingMore] = useState(false);
   const [allDone, setAllDone] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("audioEnabled") !== "false";
+  });
+
+  function toggleAudio() {
+    setAudioEnabled((prev) => {
+      const next = !prev;
+      localStorage.setItem("audioEnabled", String(next));
+      return next;
+    });
+  }
 
   const results = useRef<{ itemId: string; rating: Rating; responseTimeMs: number; mode: string }[]>([]);
   const translationCache = useRef(new Map<string, string>());
@@ -187,13 +199,13 @@ export default function ReviewSession({
     if (card) initCard(card);
   }, [card, initCard]);
 
-  // Auto-play audio when entering an audio-mode card
+  // Auto-play audio on every card when audio is enabled
   useEffect(() => {
-    if (card && cardMode === "audio") {
+    if (card && audioEnabled) {
       const t = setTimeout(() => playAudio(card.sentences[0] ?? ""), 300);
       return () => clearTimeout(t);
     }
-  }, [card, cardMode, playAudio]);
+  }, [card, audioEnabled, playAudio]);
 
   function handleReveal() {
     setPhase("rate");
@@ -262,9 +274,21 @@ export default function ReviewSession({
           )}
         </span>
 
-        <div className="flex items-center gap-1.5 shrink-0 text-stone-500">
+        <div className="flex items-center gap-2 shrink-0 text-stone-500">
           {loadingMore && <Loader2 className="w-3 h-3 animate-spin text-stone-300" />}
           <span>{reviewed} reviewed</span>
+          <button
+            onClick={toggleAudio}
+            className={`p-1.5 rounded-lg transition-colors ${
+              audioEnabled
+                ? "text-violet-500 bg-violet-50 hover:bg-violet-100"
+                : "text-stone-400 bg-stone-100 hover:bg-stone-200"
+            }`}
+            aria-label={audioEnabled ? "Disable audio" : "Enable audio"}
+            title={audioEnabled ? "Audio on — tap to mute" : "Audio off — tap to unmute"}
+          >
+            {audioEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </button>
         </div>
       </div>
 
@@ -274,11 +298,15 @@ export default function ReviewSession({
           <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 mb-6 min-h-[220px] flex flex-col items-center justify-center gap-4">
 
             {/* Prompt */}
-            {isAudio ? (
+            {isAudio && audioEnabled ? (
               <>
                 <Headphones className="w-10 h-10 text-violet-300" />
                 <p className="text-sm text-stone-400">Listen and recall the meaning</p>
               </>
+            ) : isAudio && !audioEnabled ? (
+              <p className="text-2xl font-medium text-stone-800 leading-relaxed text-center">
+                {dutch}
+              </p>
             ) : isReverse ? (
               translation ? (
                 <p className="text-2xl font-medium text-stone-800 leading-relaxed text-center italic">
@@ -293,22 +321,24 @@ export default function ReviewSession({
               </p>
             )}
 
-            {/* Audio button */}
-            <button
-              onClick={() => playAudio(dutch)}
-              className={`p-3 rounded-full transition-colors ${
-                isAudio ? "p-4" : ""
-              } ${
-                audioPlaying
-                  ? "text-violet-500 bg-violet-50"
-                  : isAudio
-                  ? "text-violet-400 bg-violet-50 hover:bg-violet-100"
-                  : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
-              }`}
-              aria-label="Play pronunciation"
-            >
-              <Volume2 className={isAudio ? "w-8 h-8" : "w-5 h-5"} />
-            </button>
+            {/* Audio button — hidden when audio is disabled */}
+            {audioEnabled && (
+              <button
+                onClick={() => playAudio(dutch)}
+                className={`p-3 rounded-full transition-colors ${
+                  isAudio ? "p-4" : ""
+                } ${
+                  audioPlaying
+                    ? "text-violet-500 bg-violet-50"
+                    : isAudio
+                    ? "text-violet-400 bg-violet-50 hover:bg-violet-100"
+                    : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
+                }`}
+                aria-label="Play pronunciation"
+              >
+                <Volume2 className={isAudio ? "w-8 h-8" : "w-5 h-5"} />
+              </button>
+            )}
 
             {/* Answer reveal */}
             {phase === "rate" && (
@@ -327,17 +357,19 @@ export default function ReviewSession({
                 ) : isReverse ? (
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-center text-lg font-medium text-stone-700">{dutch}</p>
-                    <button
-                      onClick={() => playAudio(dutch)}
-                      className={`p-1.5 rounded-full transition-colors ${
-                        audioPlaying
-                          ? "text-orange-500 bg-orange-50"
-                          : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
-                      }`}
-                      aria-label="Play pronunciation"
-                    >
-                      <Volume2 className="w-4 h-4" />
-                    </button>
+                    {audioEnabled && (
+                      <button
+                        onClick={() => playAudio(dutch)}
+                        className={`p-1.5 rounded-full transition-colors ${
+                          audioPlaying
+                            ? "text-orange-500 bg-orange-50"
+                            : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
+                        }`}
+                        aria-label="Play pronunciation"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 ) : translation ? (
                   <p className="text-center text-sm text-stone-400 italic">{translation}</p>
