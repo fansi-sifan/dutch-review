@@ -199,6 +199,13 @@ export default function ReviewSession({
     if (card) initCard(card);
   }, [card, initCard]);
 
+  // Skip audio-drill cards entirely when audio is disabled
+  useEffect(() => {
+    if (card && !audioEnabled && cardMode === "audio") {
+      setIndex((i) => i + 1);
+    }
+  }, [card, audioEnabled, cardMode]);
+
   // Auto-play audio on forward and audio-mode cards (not reverse — hearing Dutch first lets you cheat)
   useEffect(() => {
     if (card && audioEnabled && cardMode !== "reverse") {
