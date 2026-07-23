@@ -3,14 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import ReviewSession from "@/components/ReviewSession";
 import type { ReviewCard, Rating } from "@/types";
-import { BookOpen, Languages, Loader2, Headphones } from "lucide-react";
+import { BookOpen, Loader2, Headphones } from "lucide-react";
 import Link from "next/link";
 
 type SessionState = "idle" | "loading" | "active" | "done";
 type Mode = "forward" | "reverse" | "audio";
 
 export default function ReviewPage() {
-  const [state, setState] = useState<SessionState>("idle");
+  const [state, setState] = useState<SessionState>("loading");
   const [mode, setMode] = useState<Mode>("forward");
   const [initialCards, setInitialCards] = useState<ReviewCard[]>([]);
   const [sessionStats, setSessionStats] = useState<{
@@ -21,28 +21,35 @@ export default function ReviewPage() {
     allDone: boolean;
   } | null>(null);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setMode((params.get("mode") ?? "forward") as Mode);
-  }, []);
-
   function getUnitsParam(): string {
     if (typeof window === "undefined") return "1,2,3,4,5,6";
     const unlocked = parseInt(localStorage.getItem("unlockedUpTo") ?? "6", 10);
     return Array.from({ length: unlocked }, (_, i) => i + 1).join(",");
   }
 
-  async function startSession() {
+  const startSession = useCallback(async (m: Mode) => {
+    setMode(m);
     setState("loading");
     setSessionStats(null);
-    const res = await fetch(`/api/reviews?units=${getUnitsParam()}&mode=${mode}`);
+    const res = await fetch(`/api/reviews?units=${getUnitsParam()}&mode=${m}`);
     const data = await res.json();
     setInitialCards(data.cards ?? []);
     setState((data.cards ?? []).length > 0 ? "active" : "done");
     if ((data.cards ?? []).length === 0) {
       setSessionStats({ total: 0, forgot: 0, hard: 0, easy: 0, allDone: true });
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = (params.get("mode") ?? "forward") as Mode;
+    if (m !== "forward") {
+      startSession(m);
+    } else {
+      setMode("forward");
+      setState("idle");
+    }
+  }, [startSession]);
 
   // Called by ReviewSession each time it needs more cards.
   // Reverse practice is a finite set — return [] so it ends naturally.
@@ -89,29 +96,6 @@ export default function ReviewPage() {
     );
   }
 
-  const isReverse = mode === "reverse";
-  const isAudio = mode === "audio";
-
-  const modeIcon = isAudio
-    ? <Headphones className="w-12 h-12 text-violet-400 mx-auto" />
-    : isReverse
-    ? <Languages className="w-12 h-12 text-blue-400 mx-auto" />
-    : <BookOpen className="w-12 h-12 text-orange-400 mx-auto" />;
-
-  const modeTitle = isAudio
-    ? "Listening Practice"
-    : isReverse
-    ? "Reverse Practice"
-    : "Ready to review?";
-
-  const modeDesc = isAudio
-    ? "Listen to the Dutch audio and try to recall the English meaning."
-    : isReverse
-    ? "All learned cards, English → Dutch. Ratings count toward your schedule."
-    : "New words + due reviews. Some cards flip to EN→NL once you've seen them enough.";
-
-  const modeColor = isAudio ? "bg-violet-500" : isReverse ? "bg-blue-500" : "bg-orange-500";
-
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6 gap-6">
       {state === "loading" && (
@@ -121,11 +105,7 @@ export default function ReviewPage() {
       {state === "done" && sessionStats && (
         <div className="w-full max-w-sm bg-white rounded-2xl border border-stone-200 p-8 shadow-sm space-y-4">
           <h2 className="text-xl font-bold text-stone-800 text-center">
-            {sessionStats.total === 0
-              ? "All caught up! 🎉"
-              : sessionStats.allDone
-              ? "All caught up! 🎉"
-              : "Session done!"}
+            {sessionStats.total === 0 || sessionStats.allDone ? "All caught up! 🎉" : "Session done!"}
           </h2>
           {sessionStats.total > 0 && (
             <p className="text-xs text-center text-stone-400">
@@ -153,7 +133,7 @@ export default function ReviewPage() {
           <div className="flex gap-3 pt-2">
             {!sessionStats.allDone && (
               <button
-                onClick={startSession}
+                onClick={() => startSession(mode)}
                 className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium text-sm active:scale-[0.98] transition-transform"
               >
                 Keep going
@@ -170,18 +150,33 @@ export default function ReviewPage() {
       )}
 
       {state === "idle" && (
-        <div className="w-full max-w-sm space-y-4 text-center">
-          {modeIcon}
-          <h1 className="text-2xl font-bold text-stone-800">{modeTitle}</h1>
-          <p className="text-stone-500 text-sm">{modeDesc}</p>
+        <div className="w-full max-w-sm space-y-3">
+          <h1 className="text-xl font-bold text-stone-800 text-center mb-5">How do you want to review?</h1>
+
           <button
-            onClick={startSession}
-            className={`w-full py-4 rounded-2xl text-white font-semibold text-lg active:scale-[0.98] transition-transform shadow-sm ${modeColor}`}
+            onClick={() => startSession("forward")}
+            className="flex items-center gap-4 w-full p-5 rounded-2xl bg-white border-2 border-stone-200 hover:border-orange-300 active:scale-[0.98] transition-all text-left"
           >
-            Start
+            <BookOpen className="w-8 h-8 text-orange-400 shrink-0" />
+            <div>
+              <p className="font-semibold text-stone-800">Audio off</p>
+              <p className="text-sm text-stone-500">Read Dutch, recall the meaning</p>
+            </div>
           </button>
-          <Link href="/" className="block text-sm text-stone-400 hover:text-stone-600">
-            ← Back to home
+
+          <button
+            onClick={() => startSession("audio")}
+            className="flex items-center gap-4 w-full p-5 rounded-2xl bg-white border-2 border-stone-200 hover:border-violet-300 active:scale-[0.98] transition-all text-left"
+          >
+            <Headphones className="w-8 h-8 text-violet-400 shrink-0" />
+            <div>
+              <p className="font-semibold text-stone-800">Audio on</p>
+              <p className="text-sm text-stone-500">Listen to Dutch, recall the meaning</p>
+            </div>
+          </button>
+
+          <Link href="/" className="block text-sm text-stone-400 hover:text-stone-600 text-center pt-2">
+            ← Back
           </Link>
         </div>
       )}
