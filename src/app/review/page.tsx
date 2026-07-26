@@ -154,7 +154,7 @@ export default function ReviewPage() {
           <h1 className="text-xl font-bold text-stone-800 text-center mb-5">How do you want to review?</h1>
 
           <button
-            onClick={() => startSession("forward")}
+            onClick={() => { localStorage.setItem("audioEnabled", "false"); startSession("forward"); }}
             className="flex items-center gap-4 w-full p-5 rounded-2xl bg-white border-2 border-stone-200 hover:border-orange-300 active:scale-[0.98] transition-all text-left"
           >
             <BookOpen className="w-8 h-8 text-orange-400 shrink-0" />
@@ -165,13 +165,13 @@ export default function ReviewPage() {
           </button>
 
           <button
-            onClick={() => startSession("audio")}
+            onClick={() => { localStorage.setItem("audioEnabled", "true"); startSession("forward"); }}
             className="flex items-center gap-4 w-full p-5 rounded-2xl bg-white border-2 border-stone-200 hover:border-violet-300 active:scale-[0.98] transition-all text-left"
           >
             <Headphones className="w-8 h-8 text-violet-400 shrink-0" />
             <div>
               <p className="font-semibold text-stone-800">Audio on</p>
-              <p className="text-sm text-stone-500">Listen to Dutch, recall the meaning</p>
+              <p className="text-sm text-stone-500">Read Dutch + hear pronunciation</p>
             </div>
           </button>
 
