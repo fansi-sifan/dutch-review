@@ -105,13 +105,31 @@ export function getNewItems(
 }
 
 // Choose a word to blank out for fill-in-blank mode
-export function pickBlankWord(sentence: string): { blanked: string; answer: string } | null {
-  // Prefer content words (nouns, verbs) — skip short function words
-  const SKIP = new Set(["de", "het", "een", "en", "in", "op", "is", "zijn", "hij", "zij", "ik", "u"]);
-  const words = sentence.split(/\s+/);
-  const candidates = words
+// Prefer content words (nouns, verbs) — skip short function words
+const SKIP = new Set(["de", "het", "een", "en", "in", "op", "is", "zijn", "hij", "zij", "ik", "u"]);
+
+function contentWords(sentence: string): { w: string; i: number }[] {
+  return sentence
+    .split(/\s+/)
     .map((w, i) => ({ w, i }))
     .filter(({ w }) => w.length > 3 && !SKIP.has(w.toLowerCase().replace(/[^a-z]/gi, "")));
+}
+
+/**
+ * Index of the word worth drawing the eye to, or -1 if the sentence is all
+ * function words. Deterministic (longest content word, first on a tie) so a
+ * card rendered twice in one day highlights the same word — unlike
+ * pickBlankWord, which is deliberately random per review.
+ */
+export function pickKeyWordIndex(sentence: string): number {
+  const candidates = contentWords(sentence);
+  if (!candidates.length) return -1;
+  return candidates.reduce((best, c) => (c.w.length > best.w.length ? c : best)).i;
+}
+
+export function pickBlankWord(sentence: string): { blanked: string; answer: string } | null {
+  const words = sentence.split(/\s+/);
+  const candidates = contentWords(sentence);
 
   if (!candidates.length) return null;
 

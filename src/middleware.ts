@@ -49,10 +49,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Always allow: login page, auth API, Next.js internals, static assets
+  // Always allow: login page, auth API, Next.js internals, static assets.
+  // /api/picpak-card is fetched headlessly by the Pi, which has no cookie — it
+  // carries its own PICPAK_TOKEN check instead.
   if (
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/picpak-card") ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
     pathname === "/manifest.json" ||
