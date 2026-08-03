@@ -87,7 +87,14 @@ function fontSizeFor(text: string): number {
   return 19;
 }
 
-async function selectCard() {
+/**
+ * @param index which card of the weak pool to render. Omitted, the card rotates
+ *   on ROTATE_HOURS -- the single-card mode, where the Pi pushes one image and
+ *   the choice is made here. Supplied, the caller is loading a whole deck onto
+ *   the device and driving the index itself; rotation then belongs to the
+ *   panel's own refresh_interval, not to us.
+ */
+async function selectCard(index?: number) {
   const weak = await getWeakItems(POOL_SIZE * 3);
   if (!weak.length) return null;
 
@@ -100,7 +107,12 @@ async function selectCard() {
     .slice(0, POOL_SIZE);
   if (!pool.length) return null;
 
-  const chosen = pool[periodIndex() % pool.length];
+  // An out-of-range index means the deck on the device is longer than the pool
+  // is now -- the caller needs to erase that tail, not wrap around to a card it
+  // already has.
+  if (index !== undefined && (index < 0 || index >= pool.length)) return null;
+
+  const chosen = index !== undefined ? pool[index] : pool[periodIndex() % pool.length];
   const card = byId.get(chosen.itemId)!;
 
   const translations = await getCachedTranslations([card.itemId]);
@@ -128,7 +140,16 @@ export async function GET(request: NextRequest) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const card = await selectCard();
+  const rawIndex = request.nextUrl.searchParams.get("index");
+  let index: number | undefined;
+  if (rawIndex !== null) {
+    index = Number(rawIndex);
+    if (!Number.isInteger(index) || index < 0) {
+      return new NextResponse("Bad index", { status: 400 });
+    }
+  }
+
+  const card = await selectCard(index);
 
   if (request.nextUrl.searchParams.get("debug") === "1") {
     return NextResponse.json(
@@ -140,6 +161,14 @@ export async function GET(request: NextRequest) {
       },
       { headers: { "cache-control": "no-store" } }
     );
+  }
+
+  // Deck mode asked for a card past the end of the pool. 404 tells the bridge
+  // where the deck stops, so it can erase the slots beyond it -- cards that
+  // have since stopped being weak. Rendering "Geen kaarten" here instead would
+  // silently pad the device with blanks.
+  if (index !== undefined && !card) {
+    return new NextResponse("No card at index", { status: 404 });
   }
 
   // Stamp so a stale panel is obvious at a glance: if the date on the fridge
