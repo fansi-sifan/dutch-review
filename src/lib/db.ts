@@ -233,7 +233,7 @@ export async function getEasyInModeItemIds(eligibleIds: string[], mode: string):
 }
 
 /**
- * Items you are currently forgetting, most-forgotten first.
+ * Items you are currently forgetting, most urgent first.
  *
  * Scored off review_log rather than card_states.total/correct_reviews, because
  * that pair answers a different question than this one does:
@@ -244,12 +244,23 @@ export async function getEasyInModeItemIds(eligibleIds: string[], mode: string):
  *   - The ratio is over all time and never decays, so one bad review in June
  *     outranks a card missed this morning, and the ranking freezes.
  *
- * Together those pinned the PicPak deck to the same cards for two months. So:
- * weight "hard" as a partial miss, and decay each review's influence with age
- * (half-ish weight at 30 days) over a 120-day window. Plain arithmetic, no
- * SQLite math extensions — julianday() is core.
+ * Two numbers come back, and they are deliberately different:
+ *
+ *   forgetRate — how often you miss this, "hard" counted as 0.6 of a miss and
+ *     each review's weight decaying with age. This is a real rate, and
+ *     StatsPanel renders it as "N% forgot", so nothing else may be folded in.
+ *   priority — forgetRate discounted by how long ago the last miss was
+ *     (14-day half-life). This is the ordering key: it puts the words you
+ *     missed *this week* above the ones you missed worst in July.
+ *
+ * Ranking on rate alone buried the two cards missed on 2026-08-22 at slots 6
+ * and 10 of the PicPak deck, behind evidence 16 to 47 days old. Ranking on
+ * recency alone promoted 0.30-rate cards you basically know. The product is
+ * what puts recent genuine weakness first.
  */
-export async function getWeakItems(limit = 20): Promise<{ itemId: string; forgetRate: number }[]> {
+export async function getWeakItems(
+  limit = 20
+): Promise<{ itemId: string; forgetRate: number; priority: number }[]> {
   const db = await getDb();
   const res = await db.execute({
     sql: `WITH scored AS (
@@ -263,19 +274,30 @@ export async function getWeakItems(limit = 20): Promise<{ itemId: string; forget
                    1.0 / (1.0 + (julianday('now') - julianday(reviewed_at)) / 30.0) AS w
             FROM review_log
             WHERE reviewed_at >= datetime('now', '-120 days')
+          ),
+          agg AS (
+            SELECT item_id,
+                   SUM(miss * w) / SUM(w) AS forget_rate,
+                   julianday('now')
+                     - julianday(MAX(CASE WHEN miss > 0 THEN reviewed_at END)) AS days_since_miss
+            FROM scored
+            GROUP BY item_id
+            HAVING COUNT(*) >= 3
+               AND SUM(miss * w) > 0
           )
           SELECT item_id,
-                 SUM(miss * w) / SUM(w) AS forget_rate
-          FROM scored
-          GROUP BY item_id
-          HAVING COUNT(*) >= 3
-             AND SUM(miss * w) > 0
-          ORDER BY forget_rate DESC,
-                   MAX(CASE WHEN miss > 0 THEN reviewed_at END) DESC
+                 forget_rate,
+                 forget_rate / (1.0 + days_since_miss / 14.0) AS priority
+          FROM agg
+          ORDER BY priority DESC, forget_rate DESC
           LIMIT ?`,
     args: [limit],
   });
-  return res.rows.map((r) => ({ itemId: r.item_id as string, forgetRate: r.forget_rate as number }));
+  return res.rows.map((r) => ({
+    itemId: r.item_id as string,
+    forgetRate: r.forget_rate as number,
+    priority: r.priority as number,
+  }));
 }
 
 export async function getReviewStreak(): Promise<number> {
