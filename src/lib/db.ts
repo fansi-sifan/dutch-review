@@ -232,15 +232,46 @@ export async function getEasyInModeItemIds(eligibleIds: string[], mode: string):
   return res.rows.map((r) => r.item_id as string);
 }
 
+/**
+ * Items you are currently forgetting, most-forgotten first.
+ *
+ * Scored off review_log rather than card_states.total/correct_reviews, because
+ * that pair answers a different question than this one does:
+ *
+ *   - `correct_reviews` counts "hard" as correct (see recordReview), so a card
+ *     rated hard every single time scores a forget_rate of 0 and can never
+ *     surface. Only "forgot" ever moved the number — 65 of 1370 reviews.
+ *   - The ratio is over all time and never decays, so one bad review in June
+ *     outranks a card missed this morning, and the ranking freezes.
+ *
+ * Together those pinned the PicPak deck to the same cards for two months. So:
+ * weight "hard" as a partial miss, and decay each review's influence with age
+ * (half-ish weight at 30 days) over a 120-day window. Plain arithmetic, no
+ * SQLite math extensions — julianday() is core.
+ */
 export async function getWeakItems(limit = 20): Promise<{ itemId: string; forgetRate: number }[]> {
   const db = await getDb();
   const res = await db.execute({
-    sql: `SELECT item_id,
-                 CAST(total_reviews - correct_reviews AS REAL) / total_reviews AS forget_rate
-          FROM card_states
-          WHERE total_reviews >= 3
-            AND total_reviews > correct_reviews
-          ORDER BY forget_rate DESC
+    sql: `WITH scored AS (
+            SELECT item_id,
+                   reviewed_at,
+                   CASE rating
+                     WHEN 'forgot' THEN 1.0
+                     WHEN 'hard'   THEN 0.6
+                     ELSE 0.0
+                   END AS miss,
+                   1.0 / (1.0 + (julianday('now') - julianday(reviewed_at)) / 30.0) AS w
+            FROM review_log
+            WHERE reviewed_at >= datetime('now', '-120 days')
+          )
+          SELECT item_id,
+                 SUM(miss * w) / SUM(w) AS forget_rate
+          FROM scored
+          GROUP BY item_id
+          HAVING COUNT(*) >= 3
+             AND SUM(miss * w) > 0
+          ORDER BY forget_rate DESC,
+                   MAX(CASE WHEN miss > 0 THEN reviewed_at END) DESC
           LIMIT ?`,
     args: [limit],
   });
