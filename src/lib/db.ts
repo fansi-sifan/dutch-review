@@ -282,8 +282,11 @@ export async function getWeakItems(
                      - julianday(MAX(CASE WHEN miss > 0 THEN reviewed_at END)) AS days_since_miss
             FROM scored
             GROUP BY item_id
-            HAVING COUNT(*) >= 3
-               AND SUM(miss * w) > 0
+            HAVING SUM(miss * w) > 0
+               -- A word whose latest review was 'easy' has been re-learned; drop it.
+               AND (SELECT rating FROM review_log r
+                     WHERE r.item_id = scored.item_id
+                     ORDER BY r.reviewed_at DESC LIMIT 1) != 'easy'
           )
           SELECT item_id,
                  forget_rate,
